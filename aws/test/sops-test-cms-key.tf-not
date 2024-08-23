@@ -1,0 +1,57 @@
+# ------------------------------------------------------------#
+#  sops
+# ------------------------------------------------------------#
+
+resource "aws_kms_key" "sops-test-cms-key" {
+  description              = "sops-test-cms"
+  key_usage                = "ENCRYPT_DECRYPT"
+  customer_master_key_spec = "SYMMETRIC_DEFAULT"
+  multi_region             = false
+  enable_key_rotation      = false
+  is_enabled               = true
+  policy                   = "{\"Id\":\"key-consolepolicy-3\",\"Statement\":[{\"Action\":\"kms:*\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::267751904634:root\"},\"Resource\":\"*\",\"Sid\":\"Enable IAM User Permissions\"},{\"Action\":[\"kms:Create*\",\"kms:Describe*\",\"kms:Enable*\",\"kms:List*\",\"kms:Put*\",\"kms:Update*\",\"kms:Revoke*\",\"kms:Disable*\",\"kms:Get*\",\"kms:Delete*\",\"kms:TagResource\",\"kms:UntagResource\",\"kms:ScheduleKeyDeletion\",\"kms:CancelKeyDeletion\"],\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::267751904634:user/Administrator\"},\"Resource\":\"*\",\"Sid\":\"Allow access for Key Administrators\"},{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ReEncrypt*\",\"kms:GenerateDataKey*\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::267751904634:user/Administrator\"},\"Resource\":\"*\",\"Sid\":\"Allow use of the key\"},{\"Action\":[\"kms:CreateGrant\",\"kms:ListGrants\",\"kms:RevokeGrant\"],\"Condition\":{\"Bool\":{\"kms:GrantIsForAWSResource\":\"true\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::267751904634:user/Administrator\"},\"Resource\":\"*\",\"Sid\":\"Allow attachment of persistent resources\"}],\"Version\":\"2012-10-17\"}"
+}
+
+resource "aws_kms_alias" "sops-test-cms-alias" {
+  name          = "alias/sops-test-cms"
+  target_key_id = "7c3ecd1f-9a4b-45ff-b764-46bd2cacef6a"
+}
+
+
+
+# ------------------------------------------------------------#
+#  sops2
+# ------------------------------------------------------------#
+resource "aws_kms_key" "sops-test" {
+  description              = "sops-test"
+  key_usage                = "ENCRYPT_DECRYPT"
+  customer_master_key_spec = "SYMMETRIC_DEFAULT"
+  multi_region             = false
+  enable_key_rotation      = false
+  is_enabled               = true
+}
+
+resource "aws_kms_alias" "sops-test" {
+  name          = "alias/sops-test"
+  target_key_id = aws_kms_key.sops-test.id
+}
+
+resource "aws_kms_key_policy" "sops-test" {
+  key_id = aws_kms_key.sops-test.id
+  policy = jsonencode({
+    Id = "key-consolepolicy"
+    Statement = [
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+    ]
+    Version = "2012-10-17"
+  })
+}

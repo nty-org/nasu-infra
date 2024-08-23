@@ -1,0 +1,69 @@
+# ------------------------------------------------------------#
+#  terraform cloud
+# ------------------------------------------------------------#
+
+resource "aws_iam_openid_connect_provider" "terraform-cloud" {
+  url = "https://app.terraform.io"
+
+  client_id_list = [
+    "aws.workload.identity",
+  ]
+
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+}
+
+# ------------------------------------------------------------#
+#  role
+# ------------------------------------------------------------#
+
+resource "aws_iam_role" "terraform-cloud" {
+  name = "terraform_cloud_oidc_role"
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Principal = {
+          Federated = "arn:aws:iam::057585287691:oidc-provider/app.terraform.io"
+        }
+        Condition = {
+          StringLike = {
+            "app.terraform.io:aud" = "aws.workload.identity"
+            "app.terraform.io:sub" = "organization:ernie-infra:project:*:workspace:bell-sales-stg-infra:run_phase:*"
+          }
+        }
+      },
+    ]
+  })
+}
+
+data "aws_iam_policy_document" "terraform-cloud_assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = ["arn:aws:iam::057585287691:oidc-provider/app.terraform.io"]
+    }
+    
+    condition {
+      test     = "StringLike"
+      variable = "app.terraform.io:aud"
+      values = [
+        "aws.workload.identity",
+      ]
+    }
+    
+    condition {
+      test     = "StringLike"
+      variable = "app.terraform.io:sub"
+      values = [
+        "organization:ernie-infra:project:*:workspace:bell-sales-stg-infra:run_phase:*",
+      ]
+    }
+
+  }
+}

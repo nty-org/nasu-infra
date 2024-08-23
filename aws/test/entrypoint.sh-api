@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -e
+echo start entrypoint
+echo SERVER_ENV=$SERVER_ENV
+
+if [ -n "$SERVER_ENV" ] && [ "$SERVER_ENV" == "develop" ] || [ "$SERVER_ENV" == "staging" ] || [ "$SERVER_ENV" == "production" ]; then
+    echo SECRET_KEY_NAME=$SECRET_KEY_NAME
+    SECRETS=$(aws --region ap-northeast-1 secretsmanager get-secret-value --secret-id $SECRET_KEY_NAME | jq .SecretString | jq fromjson)
+    eval export $(echo $SECRETS | jq -r 'to_entries[] | "\(.key)=\(.value)"' )
+    unset SECRETS
+    printenv | sed -e 's/=\(.*\)/="\1/g' -e 's/$/"/g' > .env
+fi
+
+if [ -n "$DB_MIGRATE" ] && [ "$DB_MIGRATE" == "true" ]; then
+    python manage.py migrate
+fi
+
+if [ -n "$CELERY_ENABLED" ] && [ "$CELERY_ENABLED" == "true" ]; then
+    celery --app=config worker --beat
+fi
+
+exec "$@"
