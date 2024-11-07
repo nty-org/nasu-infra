@@ -3,6 +3,8 @@ on:
   push:
     branches:
      - main
+    paths:
+     - 'aws/**'
 env:
   AWS_ACCOUNT_ID: 267751904634
   AWS_ROLE_NAME: nasu-prod-github-actions-role
