@@ -1,23 +1,31 @@
-name: Deploy container image to AWS Lambda
+name: Update nasu-prod Lambda
 on:
   push:
     branches:
      - main
 env:
-  AWS_ACCOUNT_ID: 267751904634
-  AWS_ROLE_NAME: nasu-prod-github-actions-role
   AWS_REGION: ap-northeast-1
+  AWS_ACCOUNT_ID: 267751904634
+  PJ_PREFIX: nasu
+  ENV_PREFIX: prod
+  AWS_ROLE_NAME: nasu-prod-github-actions-role
 
 permissions:
   id-token: write
   contents: read
 jobs:
-  aws-deploy:
-    name: nasu-prod-stata-update-deploy
+  lambda-deploy:
     runs-on: ubuntu-latest
+    env:
+      LAMBDA_FUNCTION_NAME: ${{ env.PJ_PREFIX }}/${{ env.ENV_PREFIX }}-updata-state
+      ECR_REPOSITORY: ${{ env.PJ_PREFIX }}/${{ env.ENV_PREFIX }}/updata-state
+      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      IMAGE_TAG: ${{ github.sha }}
+          
+    name: ${{ env.LAMBDA_FUNCTION_NAME }}-deploy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@master
@@ -25,36 +33,31 @@ jobs:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.AWS_ROLE_NAME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          LAMBDA_FUNCTION_NAME: nasu-prod-updata-state
-          ECR_REPOSITORY: nasu/prod/updata-state
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-          
+      - name: Build, tag, and push image to ECR, and update Lambda function
+        id: build-image-and-update-lambda
+        
         working-directory: ./aws/lambda_function/update_states
         
         run: |
           # Build a docker container and
-          # push it to ECR so that it can
-          # be deployed to Lambda.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          #  Update Lambda configuration
-          aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # tag and
+          # push it to ECR
+          docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest .
+          docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          # Update Lambda configuration
+          aws lambda update-function-code --function-name ${PJ_PREFIX}-${ENV_PREFIX}-${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${PJ_PREFIX}/${ENV_PREFIX}/${LAMBDA_FUNCTION_NAME}:$IMAGE_TAG
   test:
     name: nasu-prod-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
