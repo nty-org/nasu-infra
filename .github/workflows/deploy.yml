@@ -12,7 +12,7 @@ permissions:
   id-token: write
   contents: read
 jobs:
-  lambda-deploy:
+  nasu-prod-updata-state-deploy:
     name: nasu-prod-updata-state-deploy
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +27,7 @@ jobs:
 
       - name: Login to ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push image to ECR, and update Lambda function
         id: build-image-and-update-lambda
@@ -49,7 +49,7 @@ jobs:
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
           # Update Lambda configuration
-          aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
   test:
     name: nasu-prod-test
     runs-on: ubuntu-latest
