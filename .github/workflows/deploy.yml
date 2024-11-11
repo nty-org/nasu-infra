@@ -17,8 +17,8 @@ jobs:
   lambda-deploy:
     runs-on: ubuntu-latest
     env:
-      LAMBDA_FUNCTION_NAME: ${{ env.PJ_PREFIX }}/${{ env.ENV_PREFIX }}-updata-state
-      ECR_REPOSITORY: ${{ env.PJ_PREFIX }}/${{ env.ENV_PREFIX }}/updata-state
+      LAMBDA_FUNCTION_NAME: nasu-prod-updata-state
+      ECR_REPOSITORY: nasu/prod/updata-state
       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       IMAGE_TAG: ${{ github.sha }}
           
