@@ -50,7 +50,7 @@ jobs:
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
           # Update Lambda configuration
           aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-  lambda-deploy:
+  test:
     name: nasu-prod-test
     runs-on: ubuntu-latest
     steps:
