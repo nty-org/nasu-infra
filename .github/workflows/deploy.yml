@@ -1,4 +1,5 @@
-name: Update nasu-prod Lambda
+name: Update Lambda
+run-name: Deploy ${{ github.actor }} to ${{ github.ref_name }} by @${{ github.actor }}
 on:
   push:
     branches:
