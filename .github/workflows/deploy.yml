@@ -6,8 +6,6 @@ on:
 env:
   AWS_REGION: ap-northeast-1
   AWS_ACCOUNT_ID: 267751904634
-  PJ_PREFIX: nasu
-  ENV_PREFIX: prod
   AWS_ROLE_NAME: nasu-prod-github-actions-role
 
 permissions:
@@ -15,14 +13,8 @@ permissions:
   contents: read
 jobs:
   lambda-deploy:
+    name: nasu-prod-updata-state-deploy
     runs-on: ubuntu-latest
-    env:
-      LAMBDA_FUNCTION_NAME: nasu-prod-updata-state
-      ECR_REPOSITORY: nasu/prod/updata-state
-      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      IMAGE_TAG: ${{ github.sha }}
-          
-    name: ${{ env.LAMBDA_FUNCTION_NAME }}-deploy
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,6 +32,12 @@ jobs:
       - name: Build, tag, and push image to ECR, and update Lambda function
         id: build-image-and-update-lambda
         
+        env:
+          LAMBDA_FUNCTION_NAME: nasu-prod-updata-state
+          ECR_REPOSITORY: nasu/prod/updata-state
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        
         working-directory: ./aws/lambda_function/update_states
         
         run: |
@@ -51,8 +49,8 @@ jobs:
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
           # Update Lambda configuration
-          aws lambda update-function-code --function-name ${PJ_PREFIX}-${ENV_PREFIX}-${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${PJ_PREFIX}/${ENV_PREFIX}/${LAMBDA_FUNCTION_NAME}:$IMAGE_TAG
-  test:
+          aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+  lambda-deploy:
     name: nasu-prod-test
     runs-on: ubuntu-latest
     steps:
