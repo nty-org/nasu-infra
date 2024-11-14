@@ -8,13 +8,15 @@ env:
   AWS_REGION: ap-northeast-1
   AWS_ACCOUNT_ID: 267751904634
   AWS_ROLE_NAME: nasu-prod-github-actions-role
+  PJ_PREFIX: nasu
+  ENV_PREFIX: prod  
 
 permissions:
   id-token: write
   contents: read
 jobs:
-  nasu-prod-updata-state-deploy:
-    name: nasu-prod-updata-state-deploy
+  updata-state-deploy:
+    name: ${{ env.PJ_PREFIX }}-${{ env.ENV_PREFIX }}-updata-state-deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
