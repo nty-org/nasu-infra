@@ -1,5 +1,5 @@
 name: Update Lambda
-run-name: Deploy ${{ github.event_path }} to ${{ github.ref_name }} by @${{ github.actor }}
+run-name: Deploy ${{ github.sha }} to ${{ github.ref_name }} by @${{ github.actor }}
 on:
   push:
     branches:
@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@master
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.AWS_ROLE_NAME }}
           aws-region: ${{ env.AWS_REGION }}
