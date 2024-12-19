@@ -13,7 +13,7 @@ permissions:
   id-token: write
   contents: read
 jobs:
-  deploy:
+  lambda-build:
     strategy:
       matrix:
         lambda-function-name: ["test1", "test2"]
@@ -51,6 +51,27 @@ jobs:
           docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          # Update Lambda configuration
+          #aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+          echo ${LAMBDA_FUNCTION_NAME}
+  lambda-update:
+    needs: [lambda-build]
+    strategy:
+      matrix:
+        lambda-function-name: ["test1", "test2"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Lambda function
+        id: update-lambda
+        env:
+          LAMBDA_FUNCTION_NAME: ${{ matrix.lambda-function-name }}
+          ECR_REPOSITORY: nasu/prod/updata-state
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+
+        working-directory: ./aws/lambda_function/update_states
+        
+        run: |
           # Update Lambda configuration
           #aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
           echo ${LAMBDA_FUNCTION_NAME}
