@@ -54,6 +54,7 @@ jobs:
           # Update Lambda configuration
           #aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
           echo ${LAMBDA_FUNCTION_NAME}
+
   lambda-update:
     needs: [lambda-build]
     strategy:
@@ -61,6 +62,14 @@ jobs:
         lambda-function-name: ["test1", "test2"]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.AWS_ROLE_NAME }}
+          aws-region: ${{ env.AWS_REGION }}
       - name: Update Lambda function
         id: update-lambda
         env:
