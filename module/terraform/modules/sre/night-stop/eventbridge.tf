@@ -9,7 +9,15 @@ variable "PJPrefix" {
 variable "EnvPrefix" {
   type = string
 }
-/*
+
+variable "ec2_night_stop_instance_0000-0600" {
+  type = map(string)
+}
+
+variable "rds_night_stop_cluster" {
+  type = string
+}
+
 variable "ecs_night_stop_cluster" {
   type = string
 }
@@ -20,10 +28,6 @@ variable "ecs_night_stop_services_0000-0600" {
 
 variable "ecs_night_stop_services_0000-0530" {
   type = list(string)
-}
-*/
-variable "ec2_night_stop_instance_0000-0600" {
-  type = map(string)
 }
 
 # ------------------------------------------------------------#
@@ -160,7 +164,7 @@ resource "aws_scheduler_schedule" "ec2_stop_0000-0600" {
 ## ------------------------------------------------------------#
 ##  rds night stop
 ## ------------------------------------------------------------#
-/*
+
 resource "aws_scheduler_schedule" "rds_start" {
   name       = "${var.PJPrefix}-${var.EnvPrefix}-rds-start"
   #group_name = "default"
@@ -171,7 +175,7 @@ resource "aws_scheduler_schedule" "rds_start" {
   
 
   schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(12 21 ? * MON-FRI *)"
+  schedule_expression          = "cron(00 06 ? * MON-FRI *)"
   state = "DISABLED"
 
   target {
@@ -179,7 +183,7 @@ resource "aws_scheduler_schedule" "rds_start" {
     role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
 
     input = jsonencode({
-      DbClusterIdentifier = "${aws_rds_cluster.this.id}"
+      DbClusterIdentifier = "${var.rds_night_stop_cluster}"
     })
   }
 }
@@ -194,7 +198,7 @@ resource "aws_scheduler_schedule" "rds_stop" {
   
 
   schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(50 16 ? * MON-FRI *)"
+  schedule_expression          = "cron(00 00 ? * MON-FRI *)"
   #state = "DISABLED"
 
   target {
@@ -202,81 +206,19 @@ resource "aws_scheduler_schedule" "rds_stop" {
     role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
 
     input = jsonencode({
-      DbClusterIdentifier = "${aws_rds_cluster.this.id}"
-    })
-  }
-}
-*/
-
-## ------------------------------------------------------------#
-##  ecs night
-## ------------------------------------------------------------#
-/*
-resource "aws_scheduler_schedule" "ecs_start" {
-  name       = "${var.PJPrefix}-${var.EnvPrefix}-ecs-start"
-  #group_name = "default"
-
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-
-  schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(30 13 ? * MON-FRI *)"
-  #state = "ENABLED"
-
-  target {
-    arn      = "arn:aws:scheduler:::aws-sdk:ecs:updateService"
-    role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
-
-    input = jsonencode({
-      Service      = "${aws_ecs_service.sync.name}",
-      Cluster      = "${aws_ecs_cluster.this.id}",
-      DesiredCount = 1
+      DbClusterIdentifier = "${var.rds_night_stop_cluster}"
     })
   }
 }
 
 ## ------------------------------------------------------------#
-##  ecs auto stop
+##  ecs night stop 0:00~6:00
 ## ------------------------------------------------------------#
-
-resource "aws_scheduler_schedule" "ecs_stop" {
-  name       = "${var.PJPrefix}-${var.EnvPrefix}-ecs-stop"
-  #group_name = "default"
-
-  flexible_time_window {
-    mode = "OFF"
-  }
-  
-
-  schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(00 14 ? * MON-FRI *)"
-  #state = "ENABLED"
-
-  target {
-    arn      = "arn:aws:scheduler:::aws-sdk:ecs:updateService"
-    role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
-
-    input = jsonencode({
-      Service      = "${aws_ecs_service.sync.name}",
-      Cluster      = "${aws_ecs_cluster.this.id}",
-      DesiredCount = 0
-    })
-  }
-}
-
-# ------------------------------------------------------------#
-#  ECS night stop
-# ------------------------------------------------------------#
-# ------------------------------------------------------------#
-#  0:00~6:00
-# ------------------------------------------------------------#
 
 resource "aws_scheduler_schedule" "ecs_start_0000-0600" {
   for_each = toset(var.ecs_night_stop_services_0000-0600)
 
-  name       = "ecs-start-${each.value}"
+  name       = "${var.PJPrefix}-${var.EnvPrefix}-ecs-${each.key}-start"
 
   flexible_time_window {
     mode = "OFF"
@@ -305,7 +247,7 @@ resource "aws_scheduler_schedule" "ecs_start_0000-0600" {
 resource "aws_scheduler_schedule" "ecs_stop_0000-0600" {
   for_each = toset(var.ecs_night_stop_services_0000-0600)
 
-  name       = "ecs-stop-${each.value}"
+  name       = "${var.PJPrefix}-${var.EnvPrefix}-ecs-${each.key}-stop"
 
   flexible_time_window {
     mode = "OFF"
@@ -331,14 +273,14 @@ resource "aws_scheduler_schedule" "ecs_stop_0000-0600" {
   }
 }
 
-# ------------------------------------------------------------#
-#  0:00~5:30
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  ecs night stop 0:00~5:30
+## ------------------------------------------------------------#
 
 resource "aws_scheduler_schedule" "ecs_start_0000-0530" {
   for_each = toset(var.ecs_night_stop_services_0000-0530)
 
-  name       = "ecs-start-${each.value}"
+  name       = "${var.PJPrefix}-${var.EnvPrefix}-ecs-${each.key}-start"
 
   flexible_time_window {
     mode = "OFF"
@@ -364,10 +306,11 @@ resource "aws_scheduler_schedule" "ecs_start_0000-0530" {
   }
 }
 
+
 resource "aws_scheduler_schedule" "ecs_stop_0000-0530" {
   for_each = toset(var.ecs_night_stop_services_0000-0530)
 
-  name       = "ecs-stop-${each.value}"
+  name       = "${var.PJPrefix}-${var.EnvPrefix}-ecs-${each.key}-stop"
 
   flexible_time_window {
     mode = "OFF"
@@ -392,57 +335,3 @@ resource "aws_scheduler_schedule" "ecs_stop_0000-0530" {
     })
   }
 }
-
-# ------------------------------------------------------------#
-#  EC2 night stop
-# ------------------------------------------------------------#
-# ------------------------------------------------------------#
-#  0:00~6:00
-# ------------------------------------------------------------#
-
-resource "aws_scheduler_schedule" "ec2_start_0000-0600" {
-  for_each = var.ec2_night_stop_instance_0000-0600
-
-  name       = "ec2-start-${each.key}"
-
-  flexible_time_window {
-    mode = "OFF"
-  }
-  
-  schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(00 6 * * ? *)"
-  #state = "ENABLED"
-
-  target {
-    arn      = "arn:aws:scheduler:::aws-sdk:ec2:startInstances"
-    role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
-
-    input = jsonencode({
-      InstanceIds = [each.value]
-    })
-  }
-}
-
-resource "aws_scheduler_schedule" "ec2_stop_0000-0600" {
-  for_each = var.ec2_night_stop_instance_0000-0600
-
-  name       = "ec2-stop-${each.key}"
-
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(00 0 * * ? *)"
-  #state = "ENABLED"
-
-  target {
-    arn      = "arn:aws:scheduler:::aws-sdk:ec2:stopInstances"
-    role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
-
-    input = jsonencode({
-      InstanceIds = [each.value]
-    })
-  }
-}
-*/
