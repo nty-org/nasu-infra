@@ -1,4 +1,3 @@
-/*
 # ------------------------------------------------------------#
 #  ipset
 # ------------------------------------------------------------#
@@ -6,7 +5,7 @@
 ## ------------------------------------------------------------#
 ##  api
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_wafv2_ip_set" "api_maintenance" {
   name               = "${local.PJPrefix}-${local.EnvPrefix}-api-maintenance"
   scope              = "REGIONAL"
@@ -271,53 +270,52 @@ resource "aws_wafv2_web_acl" "api" {
 
 }
 */
-
 ## ------------------------------------------------------------#
 ##  codeserver
 ## ------------------------------------------------------------#
 
 resource "aws_wafv2_web_acl" "code_server" {
-    name        = "${local.PJPrefix}-${local.EnvPrefix}-code-server-waf"
-    scope       = "REGIONAL"
+  name  = "${local.PJPrefix}-${local.EnvPrefix}-code-server-waf"
+  scope = "REGIONAL"
 
-    default_action {
-        allow {}
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "${local.PJPrefix}-${local.EnvPrefix}-code-server-maintenance"
+    priority = "0"
+
+    action {
+      allow {}
     }
 
-    rule {
-        name     = "${local.PJPrefix}-${local.EnvPrefix}-code-server-maintenance"
-        priority = "0"
-
-        action {
-            allow {}
-        }
-
-        statement {
-            ip_set_reference_statement {
-                arn = aws_wafv2_ip_set.code_server_maintenance.arn
-            }
-        }
-
-        visibility_config {
-        cloudwatch_metrics_enabled = "true"
-        metric_name                = "${local.PJPrefix}-${local.EnvPrefix}-code-server-maintenance"
-        sampled_requests_enabled   = "true"
-        }
-    }
-    
-    custom_response_body {
-        key          = "maintenance_html"
-        content      = file("./maintenance.html")
-        content_type = "TEXT_HTML"
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.code_server_maintenance.arn
+      }
     }
 
     visibility_config {
-        cloudwatch_metrics_enabled = "true"
-        metric_name                = "${local.PJPrefix}-${local.EnvPrefix}-code-server-waf"
-        sampled_requests_enabled   = "true"
+      cloudwatch_metrics_enabled = "true"
+      metric_name                = "${local.PJPrefix}-${local.EnvPrefix}-code-server-maintenance"
+      sampled_requests_enabled   = "true"
     }
+  }
 
-    lifecycle {
+  custom_response_body {
+    key          = "maintenance_html"
+    content      = file("./maintenance.html")
+    content_type = "TEXT_HTML"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = "true"
+    metric_name                = "${local.PJPrefix}-${local.EnvPrefix}-code-server-waf"
+    sampled_requests_enabled   = "true"
+  }
+
+  lifecycle {
     ignore_changes = [default_action]
   }
 
@@ -333,7 +331,7 @@ resource "aws_wafv2_web_acl_association" "code_server" {
 }
 
 ## ------------------------------------------------------------#
-##  ddos
+##  ddos detection
 ## ------------------------------------------------------------#
 /*
 resource "aws_wafv2_web_acl" "code_server" {
