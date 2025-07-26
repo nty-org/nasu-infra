@@ -134,17 +134,20 @@ resource "aws_iam_openid_connect_provider" "terraform-cloud" {
 ## ------------------------------------------------------------#
 ##  github actions OIDC
 ## ------------------------------------------------------------#
-/*
-resource "aws_iam_openid_connect_provider" "github_actions" {
-  url = "https://token.actions.githubusercontent.com"
 
-  client_id_list = [
-    "sts.amazonaws.com",
-  ]
-
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+data "http" "github_actions_openid_configuration" {
+  url = "https://token.actions.githubusercontent.com/.well-known/openid-configuration"
 }
-*/
+
+data "tls_certificate" "github_actions" {
+  url = jsondecode(data.http.github_actions_openid_configuration.response_body).jwks_uri
+}
+
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = data.tls_certificate.github_actions.certificates[*].sha1_fingerprint
+}
 
 ## ------------------------------------------------------------#
 ##  vercel
@@ -348,3 +351,107 @@ data "aws_iam_policy_document" "vercel_bastion" {
 
 }
 */
+
+## ------------------------------------------------------------#
+##  github actions
+## ------------------------------------------------------------#
+
+### ------------------------------------------------------------#
+###  terraform plan
+### ------------------------------------------------------------#
+
+resource "aws_iam_role" "github_actions_terraform_plan" {
+  name               = "${local.PJPrefix}-${local.EnvPrefix}-github-actions-terraform-plan-role"
+  assume_role_policy = data.aws_iam_policy_document.github_actions_terraform_plan_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "github_actions_terraform_plan_assume_role_policy" {
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github_actions.arn]
+    }
+    
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    # 特定のリポジトリの全てのワークフローから認証を許可する
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:usan73/nasu-infra:*"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "github_actions_terraform_plan_dynamo_access" {
+  name   = "${local.PJPrefix}-${local.EnvPrefix}-github-actions-terraform-plan-dynamo-access-policy"
+  policy = data.aws_iam_policy_document.github_actions_terraform_plan_dynamo_access.json
+}
+
+data "aws_iam_policy_document" "github_actions_terraform_plan_dynamo_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+    ]
+    resources = [
+      data.aws_dynamodb_table.tfstate.arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_terraform_plan_readonly" {
+  role       = aws_iam_role.github_actions_terraform_plan.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_terraform_plan_dynamo_access" {
+  role       = aws_iam_role.github_actions_terraform_plan.name
+  policy_arn = aws_iam_policy.github_actions_terraform_plan_dynamo_access.arn
+}
+
+### ------------------------------------------------------------#
+###  terraform apply
+### ------------------------------------------------------------#
+
+resource "aws_iam_role" "github_actions_terraform_apply" {
+  name               = "oidc-github-actions-terraform-apply-role"
+  assume_role_policy = data.aws_iam_policy_document.github_actions_terraform_apply_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "github_actions_terraform_apply_assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github_actions.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    # 特定リポジトリの特定ブランチのワークフローから認証を許可する
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:usan73/nasu-infra:environment:*"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_admin" {
+  role       = aws_iam_role.github_actions_terraform_apply.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
