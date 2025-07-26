@@ -21,7 +21,6 @@ terraform {
     encrypt        = true
     key            = "tfstate_backend.tfstate"
     region         = "ap-northeast-1"
-    profile        = "nasu-infra"
 
   }
 
@@ -54,13 +53,11 @@ terraform {
 
 provider "aws" {
   region  = "ap-northeast-1"
-  profile = "nasu-infra"
 }
 
 provider "aws" {
   alias   = "virginia"
   region  = "us-east-1"
-  profile = "nasu-infra"
 }
 /*
 provider "sops" {}
@@ -80,7 +77,6 @@ data "sops_file" "secrets_monitoring" {
 
 provider "awscc" {
   region  = "ap-northeast-1"
-  profile = "nasu-infra"
 }
 
 provider "archive" {}
