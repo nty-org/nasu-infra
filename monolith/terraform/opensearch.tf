@@ -37,3 +37,4 @@ data "aws_iam_policy_document" "opensearch_node" {
     resources = ["arn:aws:es:ap-northeast-1:${local.account_id}:domain/${local.PJPrefix}-${local.EnvPrefix}/*"]
   }
 }
+*/
