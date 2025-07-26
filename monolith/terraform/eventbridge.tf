@@ -1,71 +1,131 @@
 # ------------------------------------------------------------#
-#  eventbrige scheduler
+#  role
 # ------------------------------------------------------------#
 
 ## ------------------------------------------------------------#
-##  eventbrige scheduler role
+##  eventbrige scheduler
 ## ------------------------------------------------------------#
 
 resource "aws_iam_role" "eventbridge_scheduler" {
-  assume_role_policy = <<POLICY
-{
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "scheduler.amazonaws.com"
-      }
-    }
-  ],
-  "Version": "2012-10-17"
-}
-POLICY
-
+  assume_role_policy   = data.aws_iam_policy_document.eventbridge_scheduler_assume_role_policy.json
   max_session_duration = "3600"
   name                 = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-scheduler-role"
-  path                 = "/"
+  path                 = "/service-role/"
+}
+
+data "aws_iam_policy_document" "eventbridge_scheduler_assume_role_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["scheduler.amazonaws.com"]
+    }
+
+  }
 }
 
 resource "aws_iam_policy" "eventbridge_scheduler" {
-  name = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-scheduler-policy"
-  path = "/"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "rds:StartDBCluster",
-        "rds:StopDBCluster"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    },
-    {
-      "Action": [
-        "ecs:UpdateService"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    },
-    {
-      "Action": [
-        "ec2:StopInstances"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
+  name   = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-scheduler-policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.eventbridge_scheduler.json
 }
-POLICY
+
+data "aws_iam_policy_document" "eventbridge_scheduler" {
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecs:UpdateService"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "rds:StartDBCluster",
+      "rds:StopDBCluster"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:StartInstances",
+      "ec2:StopInstances"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
 }
 
 resource "aws_iam_role_policy_attachment" "eventbridge_scheduler" {
   role       = aws_iam_role.eventbridge_scheduler.name
   policy_arn = aws_iam_policy.eventbridge_scheduler.arn
 }
+
+## ------------------------------------------------------------#
+##  eventbridge rule sns target
+## ------------------------------------------------------------#
+
+resource "aws_iam_role" "eventbridge_rule_sns_target" {
+  assume_role_policy    = data.aws_iam_policy_document.eventbridge_rule_sns_target_assume_role_policy.json
+  max_session_duration  = "3600"
+  name                  = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-rule-sns-target-role"
+  path                  = "/service-role/"
+}
+
+data "aws_iam_policy_document" "eventbridge_rule_sns_target_assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "eventbridge_rule_sns_target" {
+  name   = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-rule-sns-target-policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.eventbridge_rule_sns_target.json
+}
+
+data "aws_iam_policy_document" "eventbridge_rule_sns_target" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:Publish",
+    ]
+    resources = [
+      "${aws_sns_topic.slack.arn}",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "eventbridge_rule_sns_target" {
+  role       = aws_iam_role.eventbridge_rule_sns_target.name
+  policy_arn = aws_iam_policy.eventbridge_rule_sns_target.arn
+}
+
+# ------------------------------------------------------------#
+#  eventbrige scheduler
+# ------------------------------------------------------------#
 
 ## ------------------------------------------------------------#
 ##  rds auto start
@@ -147,11 +207,11 @@ resource "aws_scheduler_schedule" "ec2_stop" {
     })
   }
 }
-/*
+
 ## ------------------------------------------------------------#
 ##  ecs auto start
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_scheduler_schedule" "ecs_start" {
   name       = "${local.PJPrefix}-${local.EnvPrefix}-ecs-start"
   #group_name = "default"
@@ -206,125 +266,15 @@ resource "aws_scheduler_schedule" "ecs_stop" {
   }
 }
 */
-## ------------------------------------------------------------#
-##  ecs flask auto start
-## ------------------------------------------------------------#
-/*
-resource "aws_scheduler_schedule" "flask_start" {
-  name       = "${local.PJPrefix}-${local.EnvPrefix}-flask-start"
-  #group_name = "default"
-
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-
-  schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(00 8 ? * MON-FRI *)"
-
-  target {
-    arn      = "arn:aws:scheduler:::aws-sdk:ecs:updateService"
-    role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
-
-    retry_policy {
-      maximum_retry_attempts = 3
-    }
-
-    input = jsonencode({
-      Service      = "${aws_ecs_service.flask.name}",
-      Cluster      = "${aws_ecs_cluster.this.id}",
-      DesiredCount = 2
-    })
-  }
-}
-
-## ------------------------------------------------------------#
-##  ecs flask auto stop
-## ------------------------------------------------------------#
-
-resource "aws_scheduler_schedule" "flask_stop" {
-  name       = "${local.PJPrefix}-${local.EnvPrefix}-flask-stop"
-  #group_name = "default"
-
-  flexible_time_window {
-    mode = "OFF"
-  }
-  
-
-  schedule_expression_timezone = "Asia/Tokyo"
-  schedule_expression          = "cron(50 11 ? * MON-FRI *)"
-  #state = "ENABLED"
-
-  target {
-    arn      = "arn:aws:scheduler:::aws-sdk:ecs:updateService"
-    role_arn = "${aws_iam_role.eventbridge_scheduler.arn}"
-
-    input = jsonencode({
-      Service      = "${aws_ecs_service.flask.name}",
-      Cluster      = "${aws_ecs_cluster.this.id}",
-      DesiredCount = 0
-    })
-  }
-}
-*/
-
 # ------------------------------------------------------------#
 #  eventbrige rule
 # ------------------------------------------------------------#
 
 ## ------------------------------------------------------------#
-##  eventbridge rule sns target role
-## ------------------------------------------------------------#
-
-resource "aws_iam_role" "eventbridge_rule_sns_target" {
-  assume_role_policy    = data.aws_iam_policy_document.eventbridge_rule_sns_target_assume_role_policy.json
-  max_session_duration  = "3600"
-  name                  = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-rule-sns-target-role"
-  path                  = "/"
-}
-
-data "aws_iam_policy_document" "eventbridge_rule_sns_target_assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = [
-      "sts:AssumeRole"
-    ]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_policy" "eventbridge_rule_sns_target" {
-  name   = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-rule-sns-target-policy"
-  path   = "/"
-  policy = data.aws_iam_policy_document.eventbridge_rule_sns_target.json
-}
-
-data "aws_iam_policy_document" "eventbridge_rule_sns_target" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "sns:Publish",
-    ]
-    resources = [
-      "${aws_sns_topic.slack.arn}",
-    ]
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "eventbridge_rule_sns_target" {
-  role       = aws_iam_role.eventbridge_rule_sns_target.name
-  policy_arn = aws_iam_policy.eventbridge_rule_sns_target.arn
-}
-
-## ------------------------------------------------------------#
-##  ecs flask abnormal stop detection
+##  ecs abnormal stop detection
 ## ------------------------------------------------------------#
 /*
-resource "aws_cloudwatch_log_group" "ecs_flask_abnormal_stop" {
+resource "aws_cloudwatch_log_group" "ecs_abnormal_stop" {
   name = "/aws/events/${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop"
 
   tags = {
@@ -332,7 +282,7 @@ resource "aws_cloudwatch_log_group" "ecs_flask_abnormal_stop" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "ecs_flask_abnormal_stop" {
+resource "aws_cloudwatch_event_rule" "ecs_abnormal_stop" {
   name                = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop"
   event_pattern = <<-EOT
   {
@@ -360,22 +310,22 @@ resource "aws_cloudwatch_event_rule" "ecs_flask_abnormal_stop" {
   state               = "ENABLED"
 }
 
-resource "aws_cloudwatch_event_target" "ecs_flask_abnormal_stop_log" {
+resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_log" {
   depends_on     = [
-    aws_cloudwatch_event_rule.ecs_flask_abnormal_stop,
-    aws_cloudwatch_log_group.ecs_flask_abnormal_stop
+    aws_cloudwatch_event_rule.ecs_abnormal_stop,
+    aws_cloudwatch_log_group.ecs_abnormal_stop
   ]
   
   target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop-log"
   rule      = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop"
-  arn       = aws_cloudwatch_log_group.ecs_flask_abnormal_stop.arn
+  arn       = aws_cloudwatch_log_group.ecs_abnormal_stop.arn
 
 }
 
-resource "aws_cloudwatch_event_target" "ecs_flask_abnormal_stop_notification" {
+resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_notification" {
   depends_on     = [
-    aws_cloudwatch_event_rule.ecs_flask_abnormal_stop,
-    aws_cloudwatch_log_group.ecs_flask_abnormal_stop
+    aws_cloudwatch_event_rule.ecs_abnormal_stop,
+    aws_cloudwatch_log_group.ecs_abnormal_stop
   ]
   
   target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop-notification"
