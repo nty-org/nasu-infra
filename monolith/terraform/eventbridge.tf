@@ -5,7 +5,7 @@
 ## ------------------------------------------------------------#
 ##  eventbrige scheduler
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_iam_role" "eventbridge_scheduler" {
   assume_role_policy   = data.aws_iam_policy_document.eventbridge_scheduler_assume_role_policy.json
   max_session_duration = "3600"
@@ -74,7 +74,7 @@ resource "aws_iam_role_policy_attachment" "eventbridge_scheduler" {
   role       = aws_iam_role.eventbridge_scheduler.name
   policy_arn = aws_iam_policy.eventbridge_scheduler.arn
 }
-
+*/
 ## ------------------------------------------------------------#
 ##  eventbridge rule sns target
 ## ------------------------------------------------------------#
@@ -244,7 +244,7 @@ resource "aws_scheduler_schedule" "rds_stop" {
 ## ------------------------------------------------------------#
 ##  ec2 auto stop
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_scheduler_schedule" "ec2_stop" {
   name = "${local.PJPrefix}-${local.EnvPrefix}-ec2-stop"
   #group_name = "default"
@@ -267,7 +267,7 @@ resource "aws_scheduler_schedule" "ec2_stop" {
     })
   }
 }
-
+*/
 ## ------------------------------------------------------------#
 ##  ecs auto start
 ## ------------------------------------------------------------#
