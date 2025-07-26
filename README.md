@@ -127,6 +127,8 @@ chore: Changes to the build process or auxiliary tools and libraries such as doc
 
 ## ディレクトリ構成
 
+本リポジトリのディレクトリ構成です。
+
 <pre>
 .
 ├── .github # actions用のディレクトリ
