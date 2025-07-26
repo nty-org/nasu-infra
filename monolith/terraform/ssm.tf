@@ -1,10 +1,10 @@
 # ------------------------------------------------------------#
-#  parameterstore
+#  parameter store
 # ------------------------------------------------------------#
 
-# ------------------------------------------------------------#
-#  common
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  common
+## ------------------------------------------------------------#
 
 resource "aws_ssm_parameter" "account_id" {
   name  = "/${local.PJPrefix}/${local.EnvPrefix}/AWS_ACCOUNT_ID"
@@ -22,17 +22,17 @@ resource "aws_ssm_parameter" "server_env" {
   }
 }
 
-# ------------------------------------------------------------#
-#  flask
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  app
+## ------------------------------------------------------------#
 
-resource "aws_ssm_parameter" "flask_container_name" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/flask/CONTAINER_NAME"
+resource "aws_ssm_parameter" "app_container_name" {
+  name  = "/${local.PJPrefix}/${local.EnvPrefix}/app/CONTAINER_NAME"
   type  = "String"
-  value = "flask"
+  value = "app"
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-app"
   }
 }
 
@@ -76,13 +76,13 @@ resource "aws_ssm_parameter" "db_migrate" {
   }
 }
 
-resource "aws_ssm_parameter" "secret_key_name_flask" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/flask/SECRET_KEY_NAME"
+resource "aws_ssm_parameter" "secret_key_name_app" {
+  name  = "/${local.PJPrefix}/${local.EnvPrefix}/app/SECRET_KEY_NAME"
   type  = "String"
-  value = "${local.PJPrefix}/${local.EnvPrefix}/flask"
+  value = "${local.PJPrefix}/${local.EnvPrefix}/app"
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-app"
   }
 }
 
@@ -96,45 +96,46 @@ resource "aws_ssm_parameter" "server_type" {
   }
 }
 
-resource "aws_ssm_parameter" "image_repository_name_flask" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/flask/IMAGE_REPOSITORY_NAME"
+resource "aws_ssm_parameter" "image_repository_name_app" {
+  name  = "/${local.PJPrefix}/${local.EnvPrefix}/app/IMAGE_REPOSITORY_NAME"
   type  = "String"
-  value = "bg-rp05"
+  value = "${local.PJPrefix}/${local.EnvPrefix}/app"
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-app"
   }
 }
 
-resource "aws_ssm_parameter" "network_config_flask" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/flask/NETWORK_CONFIG"
+resource "aws_ssm_parameter" "network_config_app" {
+  name  = "/${local.PJPrefix}/${local.EnvPrefix}/app/NETWORK_CONFIG"
   type  = "String"
   value = "awsvpcConfiguration={subnets=[${aws_subnet.private["ap-northeast-1a"].id},${aws_subnet.private["ap-northeast-1c"].id},${aws_subnet.private["ap-northeast-1d"].id}],securityGroups=[${aws_security_group.private.id}],assignPublicIp=ENABLED}"
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-app"
   }
 }
 
 resource "aws_ssm_parameter" "cluster_name" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/flask/CLUSTER_NAME"
+  name  = "/${local.PJPrefix}/${local.EnvPrefix}/app/CLUSTER_NAME"
   type  = "String"
   value = "${local.PJPrefix}-${local.EnvPrefix}-cluster"
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-app"
   }
 }
-
+/*
 resource "aws_ssm_parameter" "taskdef_name_migrate" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/flask/TASKDEF_NAME_MIGRATE"
+  name  = "/${local.PJPrefix}/${local.EnvPrefix}/app/TASKDEF_NAME_MIGRATE"
   type  = "String"
   value = aws_ecs_task_definition.migrate.id
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-app"
   }
 }
+*/
 
 # ------------------------------------------------------------#
 #  sync
@@ -170,47 +171,9 @@ resource "aws_ssm_parameter" "sync_container_name" {
   }
 }
 
-# ------------------------------------------------------------#
-#  web
-# ------------------------------------------------------------#
-/*
-resource "aws_ssm_parameter" "secret_key_name_web" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/web/SECRET_KEY_NAME"
-  type  = "String"
-  value = "${local.PJPrefix}/${local.EnvPrefix}/web"
-
-  tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-web"
-  }
-}
-
-resource "aws_ssm_parameter" "web_container_name" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/web/CONTAINER_NAME"
-  type  = "String"
-  value = "web"
-
-  tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-web"
-  }
-}
-
-resource "aws_ssm_parameter" "image_repository_name" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/web/IMAGE_REPOSITORY_NAME"
-  type  = "String"
-  value = "${local.PJPrefix}/${local.EnvPrefix}/web"
-
-  tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-web"
-  }
-}
-*/
-# ------------------------------------------------------------#
-#  api
-# ------------------------------------------------------------#
-
-# ------------------------------------------------------------#
-#  codebuild
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  api
+## ------------------------------------------------------------#
 
 resource "aws_ssm_parameter" "api_container_name" {
   name  = "/${local.PJPrefix}/${local.EnvPrefix}/api/CONTAINER_NAME"
@@ -243,11 +206,11 @@ resource "aws_ssm_parameter" "secret_key_name_api" {
 }
 
 # ------------------------------------------------------------#
-#  settion manager
+#  document
 # ------------------------------------------------------------#
 
 # ------------------------------------------------------------#
-#  ssm log
+#  session manager log
 # ------------------------------------------------------------#
 
 resource "aws_ssm_document" "ssm_log" {
@@ -274,12 +237,11 @@ DOC
 
 resource "aws_cloudwatch_log_group" "session_manager_log" {
   name = "/ssm/${local.PJPrefix}-${local.EnvPrefix}-session-manager-log"
-
 }
 
 resource "aws_cloudwatch_log_metric_filter" "session_manager_rds_acceess" {
 
-  name           = "${local.PJPrefix}-${local.EnvPrefix}-session-manager-rds-access" 
+  name           = "${local.PJPrefix}-${local.EnvPrefix}-session-manager-rds-access"
   pattern        = "{ $.sessionData[0] = *psql* }"
   log_group_name = "/ssm/${local.PJPrefix}-${local.EnvPrefix}-session-manager-log"
 
@@ -289,26 +251,4 @@ resource "aws_cloudwatch_log_metric_filter" "session_manager_rds_acceess" {
     value     = 1
   }
 
-}
-
-resource "aws_cloudwatch_metric_alarm" "session_manager_rds_acceess" {
-  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-session-manager-rds-access"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  metric_name         = "${local.PJPrefix}-${local.EnvPrefix}-session-manager-rds-access"
-  namespace           = "SSM/"
-  statistic           = "Sum"
-  threshold           = 1
-  period              = 60
-  
-  datapoints_to_alarm = 1
-  evaluation_periods  = 1
-  
-  treat_missing_data  = "notBreaching"
-  
-  dimensions = {
-    
-  }
-  alarm_actions = [
-    aws_sns_topic.slack.arn
-  ]
 }
