@@ -1,0 +1,61 @@
+name: terraform plan
+on:
+    workflow_dispatch:
+      inputs:
+        environment:
+          type: choice
+          description: Planする環境
+          required: true
+          options:
+            - nasu-prod
+  
+env:
+    TERRAFORM_ENV: |-
+        ${{ fromJSON('{
+            "nasu-prod": "monolith/terraform"
+        }')[github.event.inputs.environment] }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  # ===========================
+  #  terraform plan
+  # ===========================
+  terraform_plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.TERRAFORM_ENV }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine Role from envs-iam-role.json
+        id: get_role
+        run: |
+          ROLE_ARN=$(jq -r '.["${{ env.TERRAFORM_ENV }}"].plan' ${{ github.workspace }}/.github/envs-iam-role.json)
+          if [ "$ROLE_ARN" = "null" ]; then
+            echo "Error: No role found for directory ${{ env.TERRAFORM_ENV }}"
+            exit 1
+          fi
+          echo "ROLE_ARN=${ROLE_ARN}" >> $GITHUB_ENV
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: 'us-east-1'
+          role-to-assume: ${{ env.ROLE_ARN }}
+      - uses: aquaproj/aqua-installer@v3.1.0
+        with:
+          aqua_version: v2.38.4
+          aqua_opts: ""
+      - run: terraform init
+      - run: tfcmt --output plan.md plan -- terraform plan -no-color -input=false
+      - name: Attach plan to job summary
+        if: always()
+        run: |
+          echo '# Terraform Plan (${{ github.event.inputs.environment }})' >> "$GITHUB_STEP_SUMMARY"
+          cat plan.md >> "$GITHUB_STEP_SUMMARY"
+    

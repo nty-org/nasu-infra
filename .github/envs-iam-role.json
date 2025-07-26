@@ -1,0 +1,6 @@
+{
+    "monolith/terraform": {
+        "plan": "arn:aws:iam::639246056873:role/oidc-github-actions-terraform-plan-role",
+        "apply": "arn:aws:iam::639246056873:role/oidc-github-actions-terraform-apply-role"
+    }
+}
