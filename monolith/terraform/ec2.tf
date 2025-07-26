@@ -149,7 +149,7 @@ data "aws_iam_policy_document" "ec2_code_server" {
       "${aws_s3_bucket.ssm_log.arn}/*"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -159,7 +159,7 @@ data "aws_iam_policy_document" "ec2_code_server" {
       "${aws_s3_bucket.ssm_log.arn}"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -172,7 +172,7 @@ data "aws_iam_policy_document" "ec2_code_server" {
       "arn:aws:logs:ap-northeast-1:${local.account_id}:log-group:/ssm/${local.PJPrefix}-${local.EnvPrefix}-session-manager-log:*"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -297,7 +297,7 @@ resource "aws_iam_role_policy_attachment" "ec2_rds_pf_bastion_ssm" {
 */
 
 ## ------------------------------------------------------------#
-##  nat  role
+##  nat
 ## ------------------------------------------------------------#
 
 resource "aws_iam_instance_profile" "ec2_nat" {
@@ -346,7 +346,7 @@ data "aws_iam_policy_document" "ec2_nat" {
       "${aws_s3_bucket.ssm_log.arn}/*"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -356,7 +356,7 @@ data "aws_iam_policy_document" "ec2_nat" {
       "${aws_s3_bucket.ssm_log.arn}"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -369,7 +369,7 @@ data "aws_iam_policy_document" "ec2_nat" {
       "arn:aws:logs:ap-northeast-1:${local.account_id}:log-group:/ssm/${local.PJPrefix}-${local.EnvPrefix}-session-manager-log:*"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [

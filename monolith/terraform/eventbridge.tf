@@ -246,13 +246,13 @@ resource "aws_scheduler_schedule" "rds_stop" {
 ## ------------------------------------------------------------#
 
 resource "aws_scheduler_schedule" "ec2_stop" {
-  name       = "${local.PJPrefix}-${local.EnvPrefix}-ec2-stop"
+  name = "${local.PJPrefix}-${local.EnvPrefix}-ec2-stop"
   #group_name = "default"
 
   flexible_time_window {
     mode = "OFF"
   }
-  
+
 
   schedule_expression_timezone = "Asia/Tokyo"
   schedule_expression          = "cron(00 12 ? * MON-FRI *)"

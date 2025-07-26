@@ -1,18 +1,22 @@
 # ------------------------------------------------------------#
-#  cloudtrail role
+#  role
 # ------------------------------------------------------------#
 
+##------------------------------------------------------------#
+##  cloudtrail
+## ------------------------------------------------------------#
+/*
 resource "aws_iam_role" "cloudtrail" {
-  assume_role_policy    = data.aws_iam_policy_document.cloudtrail_assume_role_policy.json
-  max_session_duration  = "3600"
-  name                  = "${local.PJPrefix}-${local.EnvPrefix}-cloudtrail-role"
-  path                  = "/"
+  assume_role_policy   = data.aws_iam_policy_document.cloudtrail_assume_role_policy.json
+  max_session_duration = "3600"
+  name                 = "${local.PJPrefix}-${local.EnvPrefix}-cloudtrail-role"
+  path                 = "/"
 
 }
 
 data "aws_iam_policy_document" "cloudtrail_assume_role_policy" {
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "sts:AssumeRole"
     ]
@@ -35,8 +39,8 @@ data "aws_iam_policy_document" "cloudtrail" {
   statement {
     effect = "Allow"
     actions = [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
     ]
     resources = [
       "arn:aws:logs:ap-northeast-1:${local.account_id}:log-group:*:log-stream:${local.account_id}_CloudTrail_ap-northeast-1*"
@@ -50,10 +54,14 @@ resource "aws_iam_role_policy_attachment" "cloudtrail" {
   role       = aws_iam_role.cloudtrail.name
   policy_arn = aws_iam_policy.cloudtrail.arn
 }
+*/
+# ------------------------------------------------------------#
+#  trail
+# ------------------------------------------------------------#
 
-# ------------------------------------------------------------#
-#  cloudtrail s3
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  s3
+## ------------------------------------------------------------#
 /*
 resource "aws_cloudtrail" "s3" {
   depends_on     = [
@@ -105,9 +113,9 @@ resource "aws_cloudwatch_log_group" "cloudtrail_s3" {
 
 }
 */
-# ------------------------------------------------------------#
-#  cloudtrail management event
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  management event
+## ------------------------------------------------------------#
 /*
 resource "aws_cloudtrail" "management_event" {
   depends_on     = [
