@@ -35,11 +35,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.3 
-      
       - name: Determine Role from envs-iam-role.json
         id: get_role
         run: |
@@ -54,6 +49,11 @@ jobs:
         with:
           aws-region: 'us-east-1'
           role-to-assume: ${{ env.ROLE_ARN }}
+          
+      - uses: aquaproj/aqua-installer@v3.1.0
+        with:
+          aqua_version: v2.38.4
+          aqua_opts: ""
 
       - run: terraform init
 
