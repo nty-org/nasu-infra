@@ -242,16 +242,16 @@ resource "aws_cloudwatch_dashboard" "this" {
   })
 }
 */
-# ------------------------------------------------------------#
-#  ECS
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  ecs
+## ------------------------------------------------------------#
 
-# ------------------------------------------------------------#
-#  flask
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  api
+## ------------------------------------------------------------#
 /*
-resource "aws_cloudwatch_metric_alarm" "ecs_flask_cpu" {
-  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-service-cpu"
+resource "aws_cloudwatch_metric_alarm" "ecs_api_cpu" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-ecs-api-service-cpu"
   alarm_description   = ""
   comparison_operator = "GreaterThanThreshold"
   metric_name         = "CPUUtilization"
@@ -263,22 +263,27 @@ resource "aws_cloudwatch_metric_alarm" "ecs_flask_cpu" {
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
+  treat_missing_data = "breaching"
+
+  dimensions = {
     "ClusterName" = "${local.PJPrefix}-${local.EnvPrefix}-cluster"
-    "ServiceName" = "${local.PJPrefix}-${local.EnvPrefix}-flask-service"
+    "ServiceName" = "${local.PJPrefix}-${local.EnvPrefix}-api-service"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
 
-resource "aws_cloudwatch_metric_alarm" "ecs_flask_memory" {
-  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-service-memory"
+resource "aws_cloudwatch_metric_alarm" "ecs_api_memory" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-ecs-api-service-memory"
   alarm_description   = ""
   comparison_operator = "GreaterThanThreshold"
   metric_name         = "MemoryUtilization"
@@ -290,51 +295,104 @@ resource "aws_cloudwatch_metric_alarm" "ecs_flask_memory" {
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
+  treat_missing_data = "breaching"
+
+  dimensions = {
     "ClusterName" = "${local.PJPrefix}-${local.EnvPrefix}-cluster"
-    "ServiceName" = "${local.PJPrefix}-${local.EnvPrefix}-flask-service"
+    "ServiceName" = "${local.PJPrefix}-${local.EnvPrefix}-api-service"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
 
-resource "aws_cloudwatch_metric_alarm" "ecs_flask_task_count" {
-  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-service-task-count"
+resource "aws_cloudwatch_metric_alarm" "ecs_api_task_count" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-ecs-api-service-task-count"
   alarm_description   = ""
-  comparison_operator = "LessThanOrEqualToThreshold"
+  comparison_operator = "LessThanThreshold"
   metric_name         = "RunningTaskCount"
   namespace           = "ECS/ContainerInsights"
   statistic           = "Average"
-  threshold           = 0
+  threshold           = 4
   period              = 60
 
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
+  treat_missing_data = "breaching"
+
+  dimensions = {
     "ClusterName" = "${local.PJPrefix}-${local.EnvPrefix}-cluster"
-    "ServiceName" = "${local.PJPrefix}-${local.EnvPrefix}-flask-service"
+    "ServiceName" = "${local.PJPrefix}-${local.EnvPrefix}-api-service"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+
+}
+
+resource "aws_cloudwatch_log_metric_filter" "ecs_api_gunicorn_error" {
+  name = "${local.PJPrefix}-${local.EnvPrefix}-ecs-api-gunicorn-error"
+
+  log_group_name = "/ecs/${local.PJPrefix}-${local.EnvPrefix}-api"
+  pattern        = "%Using worker: gthread%"
+
+  metric_transformation {
+    name      = "${local.PJPrefix}-${local.EnvPrefix}-ecs-api-gunicorn-error"
+    namespace = "ECS/Error"
+    value     = 1
+  }
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_api_gunicorn_error" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-ecs-api-gunicorn-error"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  metric_name         = "${local.PJPrefix}-${local.EnvPrefix}-ecs-api-gunicorn-error"
+  namespace           = "ECS/Error"
+  statistic           = "Sum"
+  threshold           = 1
+  period              = 60
+
+  datapoints_to_alarm = 1
+  evaluation_periods  = 1
+
+  treat_missing_data = "notBreaching"
+
+  dimensions = {
+
+  }
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+  tags = {
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
 */
-
-# ------------------------------------------------------------#
-#  RDS
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  rds
+## ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_metric_alarm" "rds_writer_cpu_70" {
   alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-rds-writer-cpu-70"
@@ -349,15 +407,17 @@ resource "aws_cloudwatch_metric_alarm" "rds_writer_cpu_70" {
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
-    "DBInstanceIdentifier" = "${local.PJPrefix}-${local.EnvPrefix}"
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "DBInstanceIdentifier" = "${local.PJPrefix}-${local.EnvPrefix}-v2"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
@@ -375,75 +435,58 @@ resource "aws_cloudwatch_metric_alarm" "rds_writer_cpu_90" {
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
-    "DBInstanceIdentifier" = "${local.PJPrefix}-${local.EnvPrefix}"
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "DBInstanceIdentifier" = "${local.PJPrefix}-${local.EnvPrefix}-v2"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
-
-  tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
-  }
-
-}
-
-resource "aws_cloudwatch_metric_alarm" "rds_writer_memory_70" {
-  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-rds-writer-memory-70"
-  alarm_description   = ""
-  comparison_operator = "LessThanOrEqualToThreshold"
-  metric_name         = "FreeableMemory"
-  namespace           = "AWS/RDS"
-  statistic           = "Average"
-  threshold           = 30
-  period              = 60
-
-  datapoints_to_alarm = 5
-  evaluation_periods  = 5
-
-  dimensions          = {
-    "DBInstanceIdentifier" = "${local.PJPrefix}-${local.EnvPrefix}"
-  }
-  alarm_actions = [
+  ok_actions = [
     aws_sns_topic.slack.arn
   ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_writer_memory_90" {
-  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-rds-writer-cpu-90"
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-rds-writer-memory-90"
   alarm_description   = ""
-  comparison_operator = "LessThanOrEqualToThreshold"
+  comparison_operator = "LessThanThreshold"
   metric_name         = "FreeableMemory"
   namespace           = "AWS/RDS"
   statistic           = "Average"
-  threshold           = 10
+  threshold           = 3435973836 #メモリ上限から計算32GB*0.1=3.2GB=3435973836B
   period              = 60
 
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
-    "DBInstanceIdentifier" = "${local.PJPrefix}-${local.EnvPrefix}"
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "DBInstanceIdentifier" = "${local.PJPrefix}-${local.EnvPrefix}-v2"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
 */
-
-# ------------------------------------------------------------#
-#  REDIS
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  redis
+## ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_metric_alarm" "redis_cpu" {
   alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-redis-cpu"
@@ -458,15 +501,20 @@ resource "aws_cloudwatch_metric_alarm" "redis_cpu" {
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
+  treat_missing_data = "breaching"
+
+  dimensions = {
     "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
@@ -478,21 +526,26 @@ resource "aws_cloudwatch_metric_alarm" "redis_memory" {
   metric_name         = "DatabaseMemoryUsagePercentage"
   namespace           = "AWS/ElastiCache"
   statistic           = "Average"
-  threshold           = 75
+  threshold           = 30
   period              = 60
 
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
+  treat_missing_data = "breaching"
+
+  dimensions = {
     "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
@@ -510,15 +563,20 @@ resource "aws_cloudwatch_metric_alarm" "redis_evictions" {
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
+  treat_missing_data = "breaching"
+
+  dimensions = {
     "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
@@ -530,13 +588,46 @@ resource "aws_cloudwatch_metric_alarm" "redis_curr_connections" {
   metric_name         = "CurrConnections"
   namespace           = "AWS/ElastiCache"
   statistic           = "Average"
-  threshold           = 500
+  threshold           = 1200
   period              = 60
 
   datapoints_to_alarm = 5
   evaluation_periods  = 5
 
-  dimensions          = {
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
+  }
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+  tags = {
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "redis_freeable_memory" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-redis-freeable-memory"
+  alarm_description   = ""
+  comparison_operator = "LessThanThreshold"
+  metric_name         = "FreeableMemory"
+  namespace           = "AWS/ElastiCache"
+  statistic           = "Average"
+  threshold           = 100
+  period              = 60
+
+  datapoints_to_alarm = 5
+  evaluation_periods  = 5
+
+  treat_missing_data = "breaching"
+
+  dimensions = {
     "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
   }
   alarm_actions = [
@@ -544,14 +635,99 @@ resource "aws_cloudwatch_metric_alarm" "redis_curr_connections" {
   ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "redis_dbo_average_ttl" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-redis-dbo-average-ttl"
+  alarm_description   = ""
+  comparison_operator = "GreaterThanThreshold"
+  metric_name         = "DB0AverageTTL"
+  namespace           = "AWS/ElastiCache"
+  statistic           = "Average"
+  threshold           = 620000000
+  period              = 60
+
+  datapoints_to_alarm = 5
+  evaluation_periods  = 5
+
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
+  }
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+  tags = {
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "redis_swap_usage" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-redis-swap-usage"
+  alarm_description   = ""
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 1
+
+  datapoints_to_alarm = 5
+  evaluation_periods  = 5
+
+  treat_missing_data = "breaching"
+
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+  metric_query {
+    id = "freeableMemory"
+    metric {
+      namespace   = "AWS/ElastiCache"
+      metric_name = "FreeableMemory"
+      period      = 60
+      stat        = "Average"
+
+      dimensions = {
+        "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
+      }
+    }
+  }
+
+  metric_query {
+    id = "swapUsage"
+    metric {
+      namespace   = "AWS/ElastiCache"
+      metric_name = "SwapUsage"
+      period      = 60
+      stat        = "Average"
+
+      dimensions = {
+        "CacheClusterId" = "${local.PJPrefix}-${local.EnvPrefix}-redis-001"
+      }
+    }
+  }
+
+  metric_query {
+    id          = "swapUsageComparisonToFreeableMemory"
+    return_data = true
+    expression  = "swapUsage>freeableMemory"
+    label       = "SwapUsageComparisonToFreeableMemory"
+  }
+
+
+  tags = {
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
 */
-# ------------------------------------------------------------#
-#  OPEN SEARCH
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  openserch
+## ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_metric_alarm" "opensearch_cpu" {
   alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-opensearch-cpu"
@@ -560,22 +736,27 @@ resource "aws_cloudwatch_metric_alarm" "opensearch_cpu" {
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ES"
   statistic           = "Maximum"
-  threshold           = 80
+  threshold           = 90
   period              = 900
 
   datapoints_to_alarm = 3
   evaluation_periods  = 3
 
-  dimensions          = {
-    "DomainName" = "${local.PJPrefix}-${local.EnvPrefix}"
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "DomainName" = "${local.PJPrefix}-${local.EnvPrefix}2"
     "ClientId"   = local.account_id
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    #Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
@@ -593,16 +774,21 @@ resource "aws_cloudwatch_metric_alarm" "opensearch_memory" {
   datapoints_to_alarm = 3
   evaluation_periods  = 3
 
-  dimensions          = {
-    "DomainName" = "${local.PJPrefix}-${local.EnvPrefix}"
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "DomainName" = "${local.PJPrefix}-${local.EnvPrefix}2"
     "ClientId"   = local.account_id
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
@@ -620,135 +806,93 @@ resource "aws_cloudwatch_metric_alarm" "opensearch_cluster_status_red" {
   datapoints_to_alarm = 1
   evaluation_periods  = 1
 
-  dimensions          = {
-    "DomainName" = "${local.PJPrefix}-${local.EnvPrefix}"
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    "DomainName" = "${local.PJPrefix}-${local.EnvPrefix}2"
     "ClientId"   = local.account_id
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 
 }
 */
-# ------------------------------------------------------------#
-#  ALB
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  ALB
+## ------------------------------------------------------------#
+
+### ------------------------------------------------------------#
+### api
+### ------------------------------------------------------------#
 /*
-resource "aws_cloudwatch_metric_alarm" "alb_flask_elb_5xx_count" {
+resource "aws_cloudwatch_metric_alarm" "alb_api_elb_5xx_count" {
   alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-alb-api-elb-5xx-count"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 1
   metric_name         = "HTTPCode_ELB_5XX_Count"
   namespace           = "AWS/ApplicationELB"
-  period              = 60
   statistic           = "Sum"
-  threshold           = 1
+  threshold           = 5
+  period              = 600
+
   datapoints_to_alarm = 1
+  evaluation_periods  = 1
+
+  treat_missing_data = "notBreaching"
+
   dimensions = {
-    "LoadBalancer" = aws_lb.flask.arn_suffix
+    "LoadBalancer" = aws_lb.api.arn_suffix
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+  tags = {
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+
 }
 
-resource "aws_cloudwatch_metric_alarm" "alb_flask_target_5xx_count" {
+resource "aws_cloudwatch_metric_alarm" "alb_api_target_5xx_count" {
   alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-alb-api-target-5xx-count"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 1
   metric_name         = "HTTPCode_Target_5XX_Count"
   namespace           = "AWS/ApplicationELB"
-  period              = 60
   statistic           = "Sum"
-  threshold           = 1
-  datapoints_to_alarm = 10
-  dimensions = {
-    "LoadBalancer" = aws_lb.flask.arn_suffix
-  }
-  alarm_actions = [
-    aws_sns_topic.slack.arn
-  ]
-}
-*/
-/*
-# source code zip
-data "local_file" "canary_source" {
-  filename = "${path.module}/canary_script/source/nodejs/node_modules/pageLoadBlueprint.js"
-}
+  threshold           = 5
+  period              = 600
 
-locals {
-  source_hash = sha256(data.local_file.canary_source.content)
-}
-
-data "archive_file" "canary_zip" {
-  type        = "zip"
-  source_dir  = "${path.module}/canary_script/source"
-  output_path = "${path.module}/canary_script/synthetics_${local.source_hash}.zip"
-}
-
-# canary
-resource "aws_synthetics_canary" "api" {
-  name                 = "${local.PJPrefix}-${local.EnvPrefix}-api-canary"
-  start_canary         = var.start_canary
-  artifact_s3_location = "s3://${aws_s3_bucket.synthetics.bucket}/logs/"
-  execution_role_arn   = aws_iam_role.synthetics.arn
-  handler              = "pageLoadBlueprint.handler"
-  zip_file             = data.archive_file.canary_zip.output_path
-  runtime_version      = "syn-nodejs-puppeteer-9.0"
-  schedule {
-    expression = "rate(5 minutes)"
-  }
-
-  run_config {
-    timeout_in_seconds = 60
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-*/
-# ------------------------------------------------------------#
-#  metric filter
-# ------------------------------------------------------------#
-/*
-resource "aws_cloudwatch_log_metric_filter" "ecs_flask_error" {
-
-  name           = "${local.PJPrefix}-${local.EnvPrefix}-flask-error" 
-  pattern        = "%hello%"
-  log_group_name = "/ecs/${local.PJPrefix}-${local.EnvPrefix}-flask"
-
-  metric_transformation {
-    name      = "${local.PJPrefix}-${local.EnvPrefix}-flask-error"
-    namespace = "ECS/Error"
-    value     = 1
-  }
-
-}
-
-resource "aws_cloudwatch_metric_alarm" "ecs_flask_error" {
-  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-flask-error"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = 1
-  metric_name         = "${local.PJPrefix}-${local.EnvPrefix}-flask-error"
-  namespace           = "ECS/Error"
-  period              = 60
-  statistic           = "Sum"
-  threshold           = 1
   datapoints_to_alarm = 1
+  evaluation_periods  = 1
+
+  treat_missing_data = "notBreaching"
+
   dimensions = {
-    
+    "LoadBalancer" = aws_lb.api.arn_suffix
   }
   alarm_actions = [
     aws_sns_topic.slack.arn
   ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+  tags = {
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+
 }
 */
-
 ## ------------------------------------------------------------#
 ##  synthetics
 ## ------------------------------------------------------------#
@@ -868,9 +1012,10 @@ resource "aws_cloudwatch_metric_alarm" "synthetics_sync_duration" {
 ## -----------------------------------------------------------#
 ##  cloudtrail
 ## -----------------------------------------------------------#
-# ------------------------------------------------------------#
-#  s3
-# ------------------------------------------------------------#
+
+### ------------------------------------------------------------#
+###  s3 
+### ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_log_metric_filter" "s3_not_app_role_download" {
 
@@ -948,9 +1093,9 @@ resource "aws_cloudwatch_metric_alarm" "s3_iam_user_download" {
   ]
 }
 */
-# ------------------------------------------------------------#
-#  ecs exec
-# ------------------------------------------------------------#
+### ------------------------------------------------------------#
+###  ecs exec
+### ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_metric_alarm" "memoryusage-rds" {
   alarm_name          = "cw-alarm-memoryusage-rds"
