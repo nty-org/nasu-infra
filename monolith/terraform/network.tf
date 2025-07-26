@@ -1,6 +1,6 @@
-#-------------------------------------------------------------#
-# vpc
-#-------------------------------------------------------------#
+# -------------------------------------------------------------#
+#  vpc
+# -------------------------------------------------------------#
 
 resource "aws_vpc" "this" {
   cidr_block           = local.vpc_cidr
@@ -13,9 +13,9 @@ resource "aws_vpc" "this" {
   }
 }
 
-#-------------------------------------------------------------#
-# vpc flow log
-#-------------------------------------------------------------#
+# -------------------------------------------------------------#
+#  vpc flow log
+# -------------------------------------------------------------#
 /*
 resource "aws_flow_log" "vpc-flowlog" {
   log_destination      = aws_s3_bucket.vpc-flowlog.arn
@@ -31,6 +31,10 @@ resource "aws_flow_log" "vpc-flowlog" {
 #  subnet
 # ------------------------------------------------------------#
 
+## ------------------------------------------------------------#
+##  public
+## ------------------------------------------------------------#
+
 resource "aws_subnet" "public" {
   for_each = toset(local.azs)
 
@@ -43,6 +47,16 @@ resource "aws_subnet" "public" {
   }
 }
 
+data "aws_subnets" "public" {
+  tags = {
+    Name = "${local.PJPrefix}-${local.EnvPrefix}-pub-subnet-*"
+  }
+}
+
+## ------------------------------------------------------------#
+##  private
+## ------------------------------------------------------------#
+
 resource "aws_subnet" "private" {
   for_each = toset(local.azs)
 
@@ -52,12 +66,6 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = "${local.PJPrefix}-${local.EnvPrefix}-pri-subnet-${local.azs_suffix[index(local.azs, each.value)]}"
-  }
-}
-
-data "aws_subnets" "public" {
-  tags = {
-    Name = "${local.PJPrefix}-${local.EnvPrefix}-pub-subnet-*"
   }
 }
 
@@ -107,8 +115,12 @@ resource "aws_nat_gateway" "this" {
 }
 */
 # ------------------------------------------------------------#
-#  route table public
+#  route table
 # ------------------------------------------------------------#
+
+## ------------------------------------------------------------#
+##  public
+## ------------------------------------------------------------#
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
@@ -130,15 +142,15 @@ resource "aws_route_table_association" "public" {
   subnet_id      = each.value.id
 }
 
-# ------------------------------------------------------------#
-#  route table private
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  private
+## ------------------------------------------------------------#
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.this.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
+    cidr_block           = "0.0.0.0/0"
     network_interface_id = "eni-014e9ee9a4921332e"
   }
 
@@ -155,8 +167,12 @@ resource "aws_route_table_association" "private" {
 }
 
 # ------------------------------------------------------------#
-#  security group public
+#  security group
 # ------------------------------------------------------------#
+
+## ------------------------------------------------------------#
+##  public
+## ------------------------------------------------------------#
 
 resource "aws_security_group" "public" {
   description = "sg for ${local.PJPrefix}-${local.EnvPrefix}-pub-sg"
@@ -223,9 +239,9 @@ resource "aws_security_group_rule" "public_allow_private_ingress" {
   type                     = "ingress"
 }
 
-# ------------------------------------------------------------#
-#  security group private
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  private
+## ------------------------------------------------------------#
 
 resource "aws_security_group" "private" {
   description = "sg for ${local.PJPrefix}-${local.EnvPrefix}-pri-sg"
@@ -234,7 +250,7 @@ resource "aws_security_group" "private" {
   tags = {
     Name = "${local.PJPrefix}-${local.EnvPrefix}-pri-sg"
   }
-  
+
   vpc_id = aws_vpc.this.id
 }
 
@@ -332,9 +348,6 @@ resource "aws_vpclattice_resource_gateway" "rds" {
   subnet_ids          = data.aws_subnets.private.ids
   security_group_ids  = [aws_security_group.private.id]
 
-  tags = {
-    
-  }
 }
 
 resource "aws_vpclattice_resource_configuration" "rds" {
@@ -352,8 +365,5 @@ resource "aws_vpclattice_resource_configuration" "rds" {
     }
   }
 
-  tags = {
-    
-  }
 }
 */
