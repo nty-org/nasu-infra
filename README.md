@@ -2,7 +2,7 @@
 
 ## 目次
 
-- [emomil-infra](#emomil-infra)
+- [nasu-infra](#nasu-infra)
   - [目次](#目次)
   - [使用技術一覧](#使用技術一覧)
   - [環境構築](#環境構築)
@@ -32,8 +32,7 @@
 1. リポジトリ clone
 
 ```
-git clone git@github.com:Viagate/emomil-infra.git
-cd emomil-infra/emomil/terraform/${Env_Prefix}
+git clone git@github.com:usan73/nasu-infra.git
 ```
 
 2. terraform install
