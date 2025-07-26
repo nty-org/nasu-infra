@@ -296,9 +296,9 @@ resource "aws_iam_role_policy_attachment" "ec2_rds_pf_bastion_ssm" {
 }
 */
 
-# ------------------------------------------------------------#
-#  nat  role
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  nat  role
+## ------------------------------------------------------------#
 
 resource "aws_iam_instance_profile" "ec2_nat" {
   name = "${local.PJPrefix}-${local.EnvPrefix}-ec2-nat-role"
