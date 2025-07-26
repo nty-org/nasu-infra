@@ -1,0 +1,15 @@
+{
+  "CORSRules": [
+    {
+      "AllowedHeaders": [],
+      "AllowedMethods": [
+        "GET"
+      ],
+      "AllowedOrigins": [
+        "https://web-test.devmirage.yomel.co",
+        "http://localhost:5173"
+      ],
+      "MaxAgeSeconds": 0
+    }
+  ]
+}

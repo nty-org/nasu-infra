@@ -1,0 +1,77 @@
+{
+  "name": "yomel-test-web-build",
+  "source": {
+    "type": "CODEPIPELINE",
+    "buildspec": "buildspec.yml",
+    "insecureSsl": false
+  },
+  "artifacts": {
+    "type": "CODEPIPELINE",
+    "name": "yomel-test-web-build",
+    "packaging": "NONE",
+    "overrideArtifactName": false,
+    "encryptionDisabled": false
+  },
+  "cache": {
+    "type": "NO_CACHE"
+  },
+  "environment": {
+    "type": "LINUX_CONTAINER",
+    "image": "aws/codebuild/amazonlinux2-x86_64-standard:5.0",
+    "computeType": "BUILD_GENERAL1_MEDIUM",
+    "environmentVariables": [
+      {
+        "name": "SECRET_KEY_NAME",
+        "value": "/yomel/test/SECRET_KEY_NAME_WEB",
+        "type": "PARAMETER_STORE"
+      },
+      {
+        "name": "CLOUDFRONT_DIST_ID",
+        "value": "/yomel/test/CLOUDFRONT_DIST_ID",
+        "type": "PARAMETER_STORE"
+      },
+      {
+        "name": "S3_BUCKET_NAME",
+        "value": "/yomel/test/S3_BUCKET_NAME",
+        "type": "PARAMETER_STORE"
+      },
+      {
+        "name": "AWS_ACCOUNT_ID",
+        "value": "/yomel/devmirage/AWS_ACCOUNT_ID",
+        "type": "PARAMETER_STORE"
+      },
+      {
+        "name": "IMAGE_REPOSITORY_NAME",
+        "value": "/yomel/test/IMAGE_REPOSITORY_NAME",
+        "type": "PARAMETER_STORE"
+      }
+    ],
+    "privilegedMode": true,
+    "imagePullCredentialsType": "CODEBUILD"
+  },
+  "serviceRole": "arn:aws:iam::639246056873:role/service-role/yomel-devmirage-build-role",
+  "timeoutInMinutes": 60,
+  "queuedTimeoutInMinutes": 70,
+  "encryptionKey": "arn:aws:kms:ap-northeast-1:639246056873:alias/aws/s3",
+  "tags": [],
+  "vpcConfig": {
+    "vpcId": "vpc-0675629042020c12b",
+    "subnets": [
+      "subnet-0559b51a79b8ad98b",
+      "subnet-039b5587e7cdf87dc",
+      "subnet-0ce3b6e02ff4a8cfb"
+    ],
+    "securityGroupIds": [
+      "sg-06ab5d3d81d70b6e2"
+    ]
+  },
+  "logsConfig": {
+    "cloudWatchLogs": {
+      "status": "ENABLED"
+    },
+    "s3Logs": {
+      "status": "DISABLED",
+      "encryptionDisabled": false
+    }
+  }
+}

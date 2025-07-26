@@ -1,0 +1,25 @@
+{
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudfront.amazonaws.com"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::web.test.yomel-assets/*",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceArn": "arn:aws:cloudfront::639246056873:distribution/E2PC6QZP5Z822Y"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::639246056873:user/yomel-devmirage-app"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::web.test.yomel-assets/maintenance/*"
+    }
+  ]
+}

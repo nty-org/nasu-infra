@@ -1,0 +1,79 @@
+{
+    "pipeline": {
+        "name": "yomel-dev-web-pipeline",
+        "roleArn": "arn:aws:iam::639246056873:role/service-role/yomel-dev-pipeline-role",
+        "artifactStore": {
+            "type": "S3",
+            "location": "yomel-dev-pipeline"
+        },
+        "stages": [
+            {
+                "name": "Source",
+                "actions": [
+                    {
+                        "name": "SourceAction",
+                        "actionTypeId": {
+                            "category": "Source",
+                            "owner": "AWS",
+                            "provider": "CodeStarSourceConnection",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "BranchName": "develop",
+                            "ConnectionArn": "arn:aws:codestar-connections:ap-northeast-1:639246056873:connection/1ac2c604-a2e2-4775-85f4-0a01626d6da3",
+                            "DetectChanges": "true",
+                            "FullRepositoryId": "ernie-mlg/ernie-call-web",
+                            "OutputArtifactFormat": "CODE_ZIP"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "inputArtifacts": [],
+                        "region": "ap-northeast-1",
+                        "namespace": "SourceVariables"
+                    }
+                ]
+            },
+            {
+                "name": "Build",
+                "actions": [
+                    {
+                        "name": "Build",
+                        "actionTypeId": {
+                            "category": "Build",
+                            "owner": "AWS",
+                            "provider": "CodeBuild",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ProjectName": "yomel-dev-web-build"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "BuildArtifact"
+                            }
+                        ],
+                        "inputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "namespace": "BuildVariables"
+                    }
+                ]
+            }
+        ],
+        "version": 3,
+        "executionMode": "SUPERSEDED",
+        "pipelineType": "V1"
+    },
+    "metadata": {
+        "pipelineArn": "arn:aws:codepipeline:ap-northeast-1:639246056873:yomel-dev-web-pipeline",
+        "created": "2023-10-11T08:44:20.124000+00:00",
+        "updated": "2023-11-15T07:51:49.835000+00:00"
+    }
+}

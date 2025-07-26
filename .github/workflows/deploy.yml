@@ -37,7 +37,7 @@ jobs:
         
         env:
           LAMBDA_FUNCTION_NAME: ${{ matrix.lambda-function-name }}
-          ECR_REPOSITORY: nasu/prod/updata-state
+          ECR_REPOSITORY: nasu/prod/${{ matrix.lambda-function-name }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         

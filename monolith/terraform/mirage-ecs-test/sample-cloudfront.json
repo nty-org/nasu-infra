@@ -1,0 +1,232 @@
+{
+    "ETag": "E1K1G02ABI99U6",
+    "Distribution": {
+        "Id": "E25201SKBBP7LZ",
+        "ARN": "arn:aws:cloudfront::639246056873:distribution/E25201SKBBP7LZ",
+        "Status": "Deployed",
+        "LastModifiedTime": "2024-12-10T02:09:37.409000+00:00",
+        "InProgressInvalidationBatches": 0,
+        "DomainName": "d1esai9s01wyzt.cloudfront.net",
+        "ActiveTrustedSigners": {
+            "Enabled": false,
+            "Quantity": 0
+        },
+        "ActiveTrustedKeyGroups": {
+            "Enabled": false,
+            "Quantity": 0
+        },
+        "DistributionConfig": {
+            "CallerReference": "terraform-20231011072822152500000001",
+            "Aliases": {
+                "Quantity": 1,
+                "Items": [
+                    "web.dev.yomel.co"
+                ]
+            },
+            "DefaultRootObject": "",
+            "Origins": {
+                "Quantity": 2,
+                "Items": [
+                    {
+                        "Id": "web.dev.yomel-assets.s3.ap-northeast-1.amazonaws.com",
+                        "DomainName": "web.dev.yomel-assets.s3.ap-northeast-1.amazonaws.com",
+                        "OriginPath": "",
+                        "CustomHeaders": {
+                            "Quantity": 0
+                        },
+                        "S3OriginConfig": {
+                            "OriginAccessIdentity": ""
+                        },
+                        "ConnectionAttempts": 3,
+                        "ConnectionTimeout": 10,
+                        "OriginShield": {
+                            "Enabled": false
+                        },
+                        "OriginAccessControlId": "E1FDOL9KA6B5SO"
+                    },
+                    {
+                        "Id": "yomel-web-vue3-dev",
+                        "DomainName": "yomel-web-vue3-dev.s3.ap-northeast-1.amazonaws.com",
+                        "OriginPath": "/latest",
+                        "CustomHeaders": {
+                            "Quantity": 0
+                        },
+                        "S3OriginConfig": {
+                            "OriginAccessIdentity": ""
+                        },
+                        "ConnectionAttempts": 3,
+                        "ConnectionTimeout": 10,
+                        "OriginShield": {
+                            "Enabled": false
+                        },
+                        "OriginAccessControlId": "E1FDOL9KA6B5SO"
+                    }
+                ]
+            },
+            "OriginGroups": {
+                "Quantity": 0
+            },
+            "DefaultCacheBehavior": {
+                "TargetOriginId": "yomel-web-vue3-dev",
+                "TrustedSigners": {
+                    "Enabled": false,
+                    "Quantity": 0
+                },
+                "TrustedKeyGroups": {
+                    "Enabled": false,
+                    "Quantity": 0
+                },
+                "ViewerProtocolPolicy": "redirect-to-https",
+                "AllowedMethods": {
+                    "Quantity": 2,
+                    "Items": [
+                        "HEAD",
+                        "GET"
+                    ],
+                    "CachedMethods": {
+                        "Quantity": 2,
+                        "Items": [
+                            "HEAD",
+                            "GET"
+                        ]
+                    }
+                },
+                "SmoothStreaming": false,
+                "Compress": true,
+                "LambdaFunctionAssociations": {
+                    "Quantity": 0
+                },
+                "FunctionAssociations": {
+                    "Quantity": 0
+                },
+                "FieldLevelEncryptionId": "",
+                "CachePolicyId": "f1045863-956e-4d05-b7a1-d7eb508b8561",
+                "ResponseHeadersPolicyId": "81462834-47e9-4e4d-acfc-f04d083ba2fd"
+            },
+            "CacheBehaviors": {
+                "Quantity": 2,
+                "Items": [
+                    {
+                        "PathPattern": "/yomel/*",
+                        "TargetOriginId": "web.dev.yomel-assets.s3.ap-northeast-1.amazonaws.com",
+                        "TrustedSigners": {
+                            "Enabled": false,
+                            "Quantity": 0
+                        },
+                        "TrustedKeyGroups": {
+                            "Enabled": false,
+                            "Quantity": 0
+                        },
+                        "ViewerProtocolPolicy": "https-only",
+                        "AllowedMethods": {
+                            "Quantity": 2,
+                            "Items": [
+                                "HEAD",
+                                "GET"
+                            ],
+                            "CachedMethods": {
+                                "Quantity": 2,
+                                "Items": [
+                                    "HEAD",
+                                    "GET"
+                                ]
+                            }
+                        },
+                        "SmoothStreaming": false,
+                        "Compress": true,
+                        "LambdaFunctionAssociations": {
+                            "Quantity": 0
+                        },
+                        "FunctionAssociations": {
+                            "Quantity": 0
+                        },
+                        "FieldLevelEncryptionId": "",
+                        "CachePolicyId": "f1045863-956e-4d05-b7a1-d7eb508b8561"
+                    },
+                    {
+                        "PathPattern": "/maintenance/*",
+                        "TargetOriginId": "web.dev.yomel-assets.s3.ap-northeast-1.amazonaws.com",
+                        "TrustedSigners": {
+                            "Enabled": false,
+                            "Quantity": 0
+                        },
+                        "TrustedKeyGroups": {
+                            "Enabled": false,
+                            "Quantity": 0
+                        },
+                        "ViewerProtocolPolicy": "https-only",
+                        "AllowedMethods": {
+                            "Quantity": 2,
+                            "Items": [
+                                "HEAD",
+                                "GET"
+                            ],
+                            "CachedMethods": {
+                                "Quantity": 2,
+                                "Items": [
+                                    "HEAD",
+                                    "GET"
+                                ]
+                            }
+                        },
+                        "SmoothStreaming": false,
+                        "Compress": true,
+                        "LambdaFunctionAssociations": {
+                            "Quantity": 0
+                        },
+                        "FunctionAssociations": {
+                            "Quantity": 0
+                        },
+                        "FieldLevelEncryptionId": "",
+                        "CachePolicyId": "f1045863-956e-4d05-b7a1-d7eb508b8561"
+                    }
+                ]
+            },
+            "CustomErrorResponses": {
+                "Quantity": 1,
+                "Items": [
+                    {
+                        "ErrorCode": 403,
+                        "ResponsePagePath": "/index.html",
+                        "ResponseCode": "200",
+                        "ErrorCachingMinTTL": 10
+                    }
+                ]
+            },
+            "Comment": "Distribution for Web Vue3",
+            "Logging": {
+                "Enabled": false,
+                "IncludeCookies": false,
+                "Bucket": "",
+                "Prefix": ""
+            },
+            "PriceClass": "PriceClass_200",
+            "Enabled": true,
+            "ViewerCertificate": {
+                "CloudFrontDefaultCertificate": false,
+                "ACMCertificateArn": "arn:aws:acm:us-east-1:639246056873:certificate/b5a69e9c-15b3-4600-b261-a74d7cb6aaad",
+                "SSLSupportMethod": "sni-only",
+                "MinimumProtocolVersion": "TLSv1.2_2021",
+                "Certificate": "arn:aws:acm:us-east-1:639246056873:certificate/b5a69e9c-15b3-4600-b261-a74d7cb6aaad",
+                "CertificateSource": "acm"
+            },
+            "Restrictions": {
+                "GeoRestriction": {
+                    "RestrictionType": "none",
+                    "Quantity": 0
+                }
+            },
+            "WebACLId": "arn:aws:wafv2:us-east-1:639246056873:global/webacl/yomel-dev-web-waf/292167d8-b291-437a-8707-29dcba6095be",
+            "HttpVersion": "http2",
+            "IsIPV6Enabled": true,
+            "ContinuousDeploymentPolicyId": "",
+            "Staging": false
+        },
+        "AliasICPRecordals": [
+            {
+                "CNAME": "web.dev.yomel.co",
+                "ICPRecordalStatus": "APPROVED"
+            }
+        ]
+    }
+}
