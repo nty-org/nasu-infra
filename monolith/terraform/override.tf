@@ -5,7 +5,6 @@ terraform {
     encrypt        = true
     key            = "tfstate_backend.tfstate"
     region         = "ap-northeast-1"
-    profile        = "nasu-infra"
 
   }
 }
