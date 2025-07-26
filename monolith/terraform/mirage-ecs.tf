@@ -131,7 +131,7 @@ resource "aws_lb_listener_rule" "mirage_ecs_web" {
 # ------------------------------------------------------------#
 #  mirage ecs
 # ------------------------------------------------------------#
-
+/*
 data "aws_ecs_task_definition" "mirage_ecs" {
   task_definition = aws_ecs_task_definition.mirage_ecs.family
 }
@@ -198,6 +198,7 @@ resource "aws_ecs_task_definition" "mirage_ecs" {
     Service = "${local.PJPrefix}-${local.EnvPrefix}-mirage-ecs"
   }
 }
+*/
 /*
 resource "aws_ecs_service" "mirage_ecs" {
   capacity_provider_strategy {
@@ -261,7 +262,7 @@ resource "aws_ecs_service" "mirage_ecs" {
 # ------------------------------------------------------------#
 #  mirage ecs
 # ------------------------------------------------------------#
-
+/*
 resource "aws_ssm_parameter" "mirage_domain" {
   name  = "/${local.PJPrefix}/${local.EnvPrefix}/MIRAGE_DOMAIN"
   type  = "String"
@@ -301,7 +302,7 @@ resource "aws_ssm_parameter" "htmldir" {
     Service = "${local.PJPrefix}-${local.EnvPrefix}-mirage-ecs"
   }
 }
-
+*/
 # ------------------------------------------------------------#
 #  s3
 # ------------------------------------------------------------#
@@ -392,7 +393,7 @@ resource "aws_route53_record" "acm_validation_api" {
 # ------------------------------------------------------------#
 #  web
 # ------------------------------------------------------------#
-
+/*
 resource "aws_acm_certificate" "web" {
   domain_name       = "web.${local.zone_name}"
   validation_method = "DNS"
@@ -402,7 +403,7 @@ resource "aws_acm_certificate" "web" {
     create_before_destroy = true
   }
 }
-
+*/
 # ------------------------------------------------------------#
 #  route53
 # ------------------------------------------------------------#
@@ -423,7 +424,7 @@ resource "aws_route53_record" "api_alias" {
   }
 }
 */
-
+/*
 resource "aws_route53_record" "acm_validation_web" {
   for_each = {
     for dvo in aws_acm_certificate.web.domain_validation_options : dvo.domain_name => {
@@ -433,17 +434,17 @@ resource "aws_route53_record" "acm_validation_web" {
     }
   }
 
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 300
-  type            = each.value.type
-  zone_id         = data.aws_route53_zone.this.zone_id
+  name    = each.value.name
+  records = [each.value.record]
+  ttl     = 300
+  type    = each.value.type
+  zone_id = data.aws_route53_zone.this.zone_id
 }
-
+*/
 # ------------------------------------------------------------#
 #  cloudfront
 # ------------------------------------------------------------#
-
+/*
 resource "aws_cloudfront_origin_access_control" "web_vue3" {
   name                              = "${local.PJPrefix}-${local.EnvPrefix}-web-origin-access-control"
   origin_access_control_origin_type = "s3"
@@ -491,7 +492,7 @@ resource "aws_cloudfront_response_headers_policy" "cache_control_no_cache" {
     }
   }
 }
-
+*/
 # ------------------------------------------------------------#
 #  secrets manager
 # ------------------------------------------------------------#
@@ -499,13 +500,13 @@ resource "aws_cloudfront_response_headers_policy" "cache_control_no_cache" {
 # ------------------------------------------------------------#
 #  web
 # ------------------------------------------------------------#
-
+/*
 resource "aws_secretsmanager_secret" "web" {
   name                           = "${local.PJPrefix}/${local.EnvPrefix}/web"
   force_overwrite_replica_secret = false
   recovery_window_in_days        = 30
 }
-
+*/
 # ------------------------------------------------------------#
 #  IAM
 # ------------------------------------------------------------#
@@ -523,12 +524,12 @@ resource "aws_iam_openid_connect_provider" "github_actions_mirage_ecs" {
 
   thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
 }
-*/
+
 resource "aws_iam_role" "github_actions_mirage_ecs" {
-  assume_role_policy    = data.aws_iam_policy_document.github_actions_mirage_ecs_assume_role_policy.json
-  max_session_duration  = "3600"
-  name                  = "${local.PJPrefix}-${local.EnvPrefix}-github-actions-mirage-ecs-role"
-  path                  = "/"
+  assume_role_policy   = data.aws_iam_policy_document.github_actions_mirage_ecs_assume_role_policy.json
+  max_session_duration = "3600"
+  name                 = "${local.PJPrefix}-${local.EnvPrefix}-github-actions-mirage-ecs-role"
+  path                 = "/"
 
 }
 
@@ -574,11 +575,11 @@ data "aws_iam_policy_document" "github_actions_mirage_ecs" {
 
     resources = ["*"]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
-        "ecr:*"
+      "ecr:*"
     ]
     resources = [
       "*"
@@ -603,7 +604,7 @@ data "aws_iam_policy_document" "github_actions_mirage_ecs" {
     ]
 
     resources = [
-    "*"
+      "*"
     ]
   }
 
@@ -613,3 +614,4 @@ resource "aws_iam_role_policy_attachment" "github_actions_mirage_ecs" {
   role       = aws_iam_role.github_actions_mirage_ecs.name
   policy_arn = aws_iam_policy.github_actions_mirage_ecs.arn
 }
+*/
