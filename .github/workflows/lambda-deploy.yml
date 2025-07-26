@@ -1,18 +1,25 @@
 name: Update Lambda
-run-name: Deploy ${{ github.sha }} to ${{ github.ref_name }} by @${{ github.actor }}
+run-name: Deploy Lambda ${{ github.sha }} to ${{ github.ref_name }} by @${{ github.actor }}
 on:
   push:
     branches:
      - main
+    paths:
+      - 'lambda-function/*'
 env:
   AWS_REGION: ap-northeast-1
-  AWS_ACCOUNT_ID: 267751904634
-  AWS_ROLE_NAME: nasu-prod-github-actions-role
+  AWS_ACCOUNT_ID: ${{ secrets.LAMBDA_ACCOUNT_ID }}
+  AWS_ROLE_NAME: ${{ vars.LAMBDA_ROLE_NAME }}
 
 permissions:
   id-token: write
   contents: read
+  
 jobs:
+
+  # ===========================
+  #  image build
+  # ===========================
   lambda-build:
     strategy:
       matrix:
@@ -55,6 +62,9 @@ jobs:
           #aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --image-uri ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
           echo ${LAMBDA_FUNCTION_NAME}
 
+  # ===========================
+  #  lambda deploy
+  # ===========================
   lambda-update:
     needs: [lambda-build]
     strategy:
