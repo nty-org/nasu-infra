@@ -7,7 +7,7 @@ resource "aws_sns_topic" "slack" {
 }
 
 resource "aws_sns_topic_policy" "slack" {
-  arn = aws_sns_topic.slack.arn
+  arn    = aws_sns_topic.slack.arn
   policy = data.aws_iam_policy_document.sns_slack.json
 }
 
