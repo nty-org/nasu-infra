@@ -224,61 +224,6 @@ resource "aws_lb_target_group" "flask2" {
   }
 }
 */
-/*
-# ------------------------------------------------------------#
-#  django
-# ------------------------------------------------------------#
-
-resource "aws_lb" "django" {
-  internal           = "false"
-  ip_address_type    = "ipv4"
-  load_balancer_type = "application"
-  name               = "${local.PJPrefix}-${local.EnvPrefix}-django-alb"
-  security_groups    = [aws_security_group.public.id]
-  subnets            = data.aws_subnets.public.ids
-}
-
-resource "aws_lb_listener" "django_http" {
-  default_action {
-    target_group_arn = aws_lb_target_group.django.arn
-    type             = "forward"
-  }
-
-  load_balancer_arn = aws_lb.django.arn
-  port              = "80"
-  protocol          = "HTTP"
-}
-
-resource "aws_lb_target_group" "django" {
-  deregistration_delay = "0"
-
-  health_check {
-    enabled             = "true"
-    healthy_threshold   = "2"
-    interval            = "30"
-    matcher             = "200"
-    path                = "/"
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    timeout             = "20"
-    unhealthy_threshold = "5"
-  }
-  ip_address_type               = "ipv4"
-  load_balancing_algorithm_type = "round_robin"
-  name                          = "${local.PJPrefix}-${local.EnvPrefix}-django-tg"
-  port                          = "3001"
-  protocol                      = "HTTP"
-  protocol_version              = "HTTP1"
-  target_type                   = "ip"
-  vpc_id                        = aws_vpc.this.id
-
-  stickiness {
-    cookie_duration = "86400"
-    enabled         = "false"
-    type            = "lb_cookie"
-  }
-}
-*/
 # ------------------------------------------------------------#
 #  web
 # ------------------------------------------------------------#
@@ -333,7 +278,6 @@ resource "aws_lb_target_group" "web" {
   }
 }
 */
-
 # ------------------------------------------------------------#
 #  code server
 # ------------------------------------------------------------#
