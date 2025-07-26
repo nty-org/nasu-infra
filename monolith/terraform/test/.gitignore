@@ -1,3 +1,0 @@
-generated/
-terraform.tfstate*
-.terraform.lock.hcl
