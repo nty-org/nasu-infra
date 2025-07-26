@@ -24,3 +24,7 @@ resource "aws_dynamodb_table" "tfstate" {
     prevent_destroy = true
   }
 }
+
+data "aws_dynamodb_table" "tfstate" {
+  name = "${local.PJPrefix}-${local.EnvPrefix}-tfstatelock"
+}
