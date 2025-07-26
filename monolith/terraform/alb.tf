@@ -53,30 +53,30 @@ resource "aws_lb_target_group" "api" {
 }
 */
 # ------------------------------------------------------------#
-#  flask
+#  app
 # ------------------------------------------------------------#
 /*
-resource "aws_lb" "flask" {
+resource "aws_lb" "app" {
   internal           = "false"
   ip_address_type    = "ipv4"
   load_balancer_type = "application"
-  name               = "${local.PJPrefix}-${local.EnvPrefix}-flask-alb"
+  name               = "${local.PJPrefix}-${local.EnvPrefix}-app-alb"
   security_groups    = [aws_security_group.public.id]
   subnets            = data.aws_subnets.public.ids
 }
 
-resource "aws_lb_listener" "flask_http" {
+resource "aws_lb_listener" "app_http" {
   default_action {
-    target_group_arn = aws_lb_target_group.flask.arn
+    target_group_arn = aws_lb_target_group.app.arn
     type             = "forward"
   }
 
-  load_balancer_arn = aws_lb.flask.arn
+  load_balancer_arn = aws_lb.app.arn
   port              = "80"
   protocol          = "HTTP"
 }
 
-resource "aws_lb_target_group" "flask" {
+resource "aws_lb_target_group" "app" {
   deregistration_delay = "0"
 
   health_check {
@@ -92,7 +92,7 @@ resource "aws_lb_target_group" "flask" {
   }
   ip_address_type               = "ipv4"
   load_balancing_algorithm_type = "round_robin"
-  name                          = "${local.PJPrefix}-${local.EnvPrefix}-flask-tg"
+  name                          = "${local.PJPrefix}-${local.EnvPrefix}-app-tg"
   port                          = "3001"
   protocol                      = "HTTP"
   protocol_version              = "HTTP1"
@@ -107,26 +107,26 @@ resource "aws_lb_target_group" "flask" {
 }
 */
 # ------------------------------------------------------------#
-#  flask bg
+#  app bg
 # ------------------------------------------------------------#
 /*
-resource "aws_lb" "flask" {
+resource "aws_lb" "app" {
   internal           = "false"
   ip_address_type    = "ipv4"
   load_balancer_type = "application"
-  name               = "${local.PJPrefix}-${local.EnvPrefix}-flask-alb"
+  name               = "${local.PJPrefix}-${local.EnvPrefix}-app-alb"
   security_groups    = [aws_security_group.public.id]
   subnets            = data.aws_subnets.public.ids
 
 }
 
-resource "aws_lb_listener" "flask_http" {
+resource "aws_lb_listener" "app_http" {
   default_action {
-    target_group_arn = aws_lb_target_group.flask["blue"].arn
+    target_group_arn = aws_lb_target_group.app["blue"].arn
     type             = "forward"
   }
 
-  load_balancer_arn = aws_lb.flask.arn
+  load_balancer_arn = aws_lb.app.arn
   port              = "80"
   protocol          = "HTTP"
 
@@ -138,7 +138,7 @@ resource "aws_lb_listener" "flask_http" {
   }
 }
 
-resource "aws_lb_target_group" "flask" {
+resource "aws_lb_target_group" "app" {
   for_each = toset(["blue", "green"])
 
   deregistration_delay = "0"
@@ -156,7 +156,7 @@ resource "aws_lb_target_group" "flask" {
   }
   ip_address_type               = "ipv4"
   load_balancing_algorithm_type = "round_robin"
-  name                          = "${local.PJPrefix}-${local.EnvPrefix}-flask-tg-${each.value}"
+  name                          = "${local.PJPrefix}-${local.EnvPrefix}-app-tg-${each.value}"
   port                          = "3001"
   protocol                      = "HTTP"
   protocol_version              = "HTTP1"
@@ -171,30 +171,30 @@ resource "aws_lb_target_group" "flask" {
 }
 */
 # ------------------------------------------------------------#
-#  flask2
+#  app2
 # ------------------------------------------------------------#
 /*
-resource "aws_lb" "flask2" {
+resource "aws_lb" "app2" {
   internal           = "false"
   ip_address_type    = "ipv4"
   load_balancer_type = "application"
-  name               = "${local.PJPrefix}-${local.EnvPrefix}-flask2-alb"
+  name               = "${local.PJPrefix}-${local.EnvPrefix}-app2-alb"
   security_groups    = [aws_security_group.public.id]
   subnets            = data.aws_subnets.public.ids
 }
 
-resource "aws_lb_listener" "flask2_http" {
+resource "aws_lb_listener" "app2_http" {
   default_action {
-    target_group_arn = aws_lb_target_group.flask2.arn
+    target_group_arn = aws_lb_target_group.app2.arn
     type             = "forward"
   }
 
-  load_balancer_arn = aws_lb.flask2.arn
+  load_balancer_arn = aws_lb.app2.arn
   port              = "80"
   protocol          = "HTTP"
 }
 
-resource "aws_lb_target_group" "flask2" {
+resource "aws_lb_target_group" "app2" {
   deregistration_delay = "0"
 
   health_check {
@@ -210,7 +210,7 @@ resource "aws_lb_target_group" "flask2" {
   }
   ip_address_type               = "ipv4"
   load_balancing_algorithm_type = "round_robin"
-  name                          = "${local.PJPrefix}-${local.EnvPrefix}-flask2-tg"
+  name                          = "${local.PJPrefix}-${local.EnvPrefix}-app2-tg"
   port                          = "3001"
   protocol                      = "HTTP"
   protocol_version              = "HTTP1"
