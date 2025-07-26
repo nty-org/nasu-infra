@@ -124,3 +124,15 @@ perf: A code change that improves performance
 test: Adding missing or correcting existing tests
 chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
 ```
+
+## ディレクトリ構成
+
+<pre>
+.
+├── .github # actions用のディレクトリ
+├── lambda-fuction # lambda関数用のディレクトリ
+├── monolith # 小~中規模向きモノリス構成のインフラディレクトリ
+├── module # 中~大規模向きモジュール構成のインフラディレクトリ
+├── .gitignore 
+└── README.md 
+</pre>
