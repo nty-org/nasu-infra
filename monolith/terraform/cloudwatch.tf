@@ -749,6 +749,122 @@ resource "aws_cloudwatch_metric_alarm" "ecs_flask_error" {
 }
 */
 
+## ------------------------------------------------------------#
+##  synthetics
+## ------------------------------------------------------------#
+
+### ------------------------------------------------------------#
+###  api
+### ------------------------------------------------------------#
+/*
+resource "aws_cloudwatch_metric_alarm" "synthetics_api_success" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-synthetics-api-success"
+  comparison_operator = "LessThanThreshold"
+  metric_name         = "SuccessPercent"
+  namespace           = "CloudWatchSynthetics"
+  statistic           = "Sum"
+  threshold           = 100
+  period              = 600
+
+  datapoints_to_alarm = 1
+  evaluation_periods  = 1
+
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    CanaryName = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "synthetics_api_duration" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-synthetics-api-duration"
+  comparison_operator = "GreaterThanThreshold"
+  metric_name         = "Duration"
+  namespace           = "CloudWatchSynthetics"
+  statistic           = "Sum"
+  threshold           = 10000
+  period              = 600
+
+  datapoints_to_alarm = 1
+  evaluation_periods  = 1
+
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    CanaryName = "${local.PJPrefix}-${local.EnvPrefix}-api"
+  }
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+}
+*/
+### ------------------------------------------------------------#
+###  sync
+### ------------------------------------------------------------#
+/*
+resource "aws_cloudwatch_metric_alarm" "synthetics_sync_success" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-synthetics-sync-success"
+  comparison_operator = "LessThanThreshold"
+  metric_name         = "SuccessPercent"
+  namespace           = "CloudWatchSynthetics"
+  statistic           = "Sum"
+  threshold           = 100
+  period              = 600
+
+  datapoints_to_alarm = 1
+  evaluation_periods  = 1
+
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    CanaryName = "${local.PJPrefix}-${local.EnvPrefix}-sync"
+  }
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "synthetics_sync_duration" {
+  alarm_name          = "${local.PJPrefix}-${local.EnvPrefix}-synthetics-sync-duration"
+  comparison_operator = "GreaterThanThreshold"
+  metric_name         = "Duration"
+  namespace           = "CloudWatchSynthetics"
+  statistic           = "Sum"
+  threshold           = 10000
+  period              = 600
+
+  datapoints_to_alarm = 1
+  evaluation_periods  = 1
+
+  treat_missing_data = "breaching"
+
+  dimensions = {
+    CanaryName = "${local.PJPrefix}-${local.EnvPrefix}-sync"
+  }
+  alarm_actions = [
+    aws_sns_topic.slack.arn
+  ]
+  ok_actions = [
+    aws_sns_topic.slack.arn
+  ]
+
+}
+*/
 ## -----------------------------------------------------------#
 ##  cloudtrail
 ## -----------------------------------------------------------#

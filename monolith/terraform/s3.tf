@@ -148,9 +148,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
 
     status = "Enabled"
   }
-  
-   transition_default_minimum_object_size = "all_storage_classes_128K"
-  
+
+  transition_default_minimum_object_size = "all_storage_classes_128K"
+
 }
 
 # ------------------------------------------------------------#
@@ -204,7 +204,7 @@ resource "aws_s3_bucket_public_access_block" "alb_access_log" {
 
 data "aws_iam_policy_document" "alb_access_log" {
   statement {
-    actions   = ["s3:PutObject"]
+    actions = ["s3:PutObject"]
     resources = [
       "${aws_s3_bucket.alb_access_log.arn}/*",
       "${aws_s3_bucket.alb_access_log.arn}"
@@ -276,37 +276,37 @@ data "aws_iam_policy_document" "cloudtrail_log" {
 
   #s3証跡用ポリシー
   statement {
-    sid       = "${local.PJPrefix}-${local.EnvPrefix}-s3-cloudtrail-acl-check"
-    actions   = ["s3:GetBucketAcl"]
+    sid     = "${local.PJPrefix}-${local.EnvPrefix}-s3-cloudtrail-acl-check"
+    actions = ["s3:GetBucketAcl"]
     resources = [
       "${aws_s3_bucket.cloudtrail_log.arn}"
     ]
-    
+
     principals {
       type        = "Service"
       identifiers = ["cloudtrail.amazonaws.com"]
     }
-    
+
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
       values   = ["arn:aws:cloudtrail:ap-northeast-1:${local.account_id}:trail/${local.PJPrefix}-${local.EnvPrefix}-s3"]
     }
-    
+
   }
 
   statement {
-    sid       = "${local.PJPrefix}-${local.EnvPrefix}-s3-cloudtrail-write"
-    actions   = ["s3:PutObject"]
+    sid     = "${local.PJPrefix}-${local.EnvPrefix}-s3-cloudtrail-write"
+    actions = ["s3:PutObject"]
     resources = [
       "${aws_s3_bucket.cloudtrail_log.arn}/*/AWSLogs/${local.account_id}/*"
     ]
-    
+
     principals {
       type        = "Service"
       identifiers = ["cloudtrail.amazonaws.com"]
     }
-    
+
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
@@ -319,40 +319,40 @@ data "aws_iam_policy_document" "cloudtrail_log" {
       values   = ["bucket-owner-full-control"]
     }
   }
-  
+
   #管理イベント用ポリシー
   statement {
-    sid       = "${local.PJPrefix}-${local.EnvPrefix}-management-event-cloudtrail-acl-check"
-    actions   = ["s3:GetBucketAcl"]
+    sid     = "${local.PJPrefix}-${local.EnvPrefix}-management-event-cloudtrail-acl-check"
+    actions = ["s3:GetBucketAcl"]
     resources = [
       "${aws_s3_bucket.cloudtrail_log.arn}"
     ]
-    
+
     principals {
       type        = "Service"
       identifiers = ["cloudtrail.amazonaws.com"]
     }
-    
+
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
       values   = ["arn:aws:cloudtrail:ap-northeast-1:${local.account_id}:trail/${local.PJPrefix}-${local.EnvPrefix}-management-event"]
     }
-    
+
   }
 
   statement {
-    sid       = "${local.PJPrefix}-${local.EnvPrefix}-management-event-cloudtrail-write"
-    actions   = ["s3:PutObject"]
+    sid     = "${local.PJPrefix}-${local.EnvPrefix}-management-event-cloudtrail-write"
+    actions = ["s3:PutObject"]
     resources = [
       "${aws_s3_bucket.cloudtrail_log.arn}/*/AWSLogs/${local.account_id}/*"
     ]
-    
+
     principals {
       type        = "Service"
       identifiers = ["cloudtrail.amazonaws.com"]
     }
-    
+
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
@@ -365,7 +365,7 @@ data "aws_iam_policy_document" "cloudtrail_log" {
       values   = ["bucket-owner-full-control"]
     }
   }
-  
+
 }
 
 resource "aws_s3_bucket_policy" "cloudtrail_log" {
@@ -386,7 +386,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail_log_management_even
     }
 
     expiration {
-      days                         = 30
+      days = 30
     }
 
     status = "Enabled"
@@ -535,3 +535,50 @@ resource "aws_iam_role_policy_attachment" "s3_access_grant" {
   policy_arn = aws_iam_policy.s3_access_grant.arn
 }
 */
+# ------------------------------------------------------------#
+#  synthetics
+# ------------------------------------------------------------#
+
+resource "aws_s3_bucket" "synthetics" {
+  bucket = "${local.PJPrefix}-${local.EnvPrefix}-synthetics-reports"
+}
+
+resource "aws_s3_bucket_public_access_block" "synthetics" {
+  bucket                  = aws_s3_bucket.synthetics.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "synthetics" {
+  bucket = aws_s3_bucket.synthetics.id
+
+  rule {
+    bucket_key_enabled = false
+
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "synthetics" {
+  bucket = aws_s3_bucket.synthetics.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "synthetics" {
+  bucket = aws_s3_bucket.synthetics.bucket
+  rule {
+    id = "config"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 5
+    }
+
+    status = "Enabled"
+  }
+}
