@@ -67,6 +67,52 @@ data "aws_iam_policy_document" "bedrock" {
   }
 }
 */
+## ------------------------------------------------------------#
+##  opensearch
+## ------------------------------------------------------------#
+/*
+resource "aws_iam_user" "opensearch" {
+  force_destroy = "false"
+  name          = "${local.PJPrefix}-${local.EnvPrefix}-opensearch"
+  path          = "/"
+}
+
+resource "aws_iam_user_policy_attachment" "opensearch" {
+  policy_arn = aws_iam_policy.opensearch.arn
+  user       = aws_iam_user.opensearch.name
+
+  depends_on = [
+    aws_iam_user.opensearch
+  ]
+}
+
+resource "aws_iam_policy" "opensearch" {
+  name   = "${local.PJPrefix}-${local.EnvPrefix}-openserch-policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.opensearch.json
+}
+
+data "aws_iam_policy_document" "opensearch" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutAccountPublicAccessBlock",
+      "s3:GetAccountPublicAccessBlock",
+      "s3:ListAllMyBuckets"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid     = "VisualEditor1"
+    effect  = "Allow"
+    actions = ["s3:*"]
+    resources = [
+      "*"
+    ]
+  }
+}
+*/
 # ------------------------------------------------------------#
 #  oicd
 # ------------------------------------------------------------#
@@ -100,9 +146,9 @@ resource "aws_iam_openid_connect_provider" "github_actions" {
 }
 */
 
-# ------------------------------------------------------------#
-#  vercel
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  vercel
+## ------------------------------------------------------------#
 /*
 resource "aws_iam_openid_connect_provider" "vercel_bastion" {
   url = "https://oidc.vercel.com/${local.vercel_team_slug}"
