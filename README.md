@@ -73,6 +73,12 @@ terraform init
 
 ## 開発時に利用するコマンド一覧
 
+terraform fmt(フォーマットの修正)
+
+```
+terraform fmt
+```
+
 terraform plan(適用結果の事前確認)
 
 ```
@@ -88,4 +94,18 @@ terraform apply
 
 ## Git 運用ルール
 
-現在未確定
+以下のGitワークフローを採用しています。
+
+### ブランチ命名規則
+
+新しい作業を行う際は、ブランチを作成し、その名前を以下のフォーマットに従って付けてください。
+
+```
+feature/<Task Name>
+```
+
+例
+
+```
+feature/add-ecs-cpu-monitoring
+```
