@@ -98,7 +98,7 @@ terraform apply
 
 ### ブランチ命名規則
 
-新しい作業を行う際は、ブランチを作成し、その名前を以下のフォーマットに従って付けてください。
+新しい作業を行う際は、名前を以下のフォーマットに従って付け、ブランチを作成してください。
 
 ```
 feature/<Task Name>
@@ -108,4 +108,19 @@ feature/<Task Name>
 
 ```
 feature/add-ecs-cpu-monitoring
+```
+
+### コミット命名規則
+
+作業内容の種別により、以下のプレフィックスをコミット名につけてください。
+
+```
+feat: A new feature
+fix: A bug fix
+docs: Documentation only changes 
+style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+refactor: A code change that neither fixes a bug nor adds a feature
+perf: A code change that improves performance
+test: Adding missing or correcting existing tests
+chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
 ```
