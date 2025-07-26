@@ -1,7 +1,11 @@
 # ------------------------------------------------------------#
-#  s3 yomel User
+#  user 
 # ------------------------------------------------------------#
 
+## ------------------------------------------------------------#
+##  app 
+## ------------------------------------------------------------#
+/*
 resource "aws_iam_user" "s3" {
   force_destroy = "false"
   name          = "${local.PJPrefix}-${local.EnvPrefix}-app"
@@ -62,10 +66,61 @@ data "aws_iam_policy_document" "bedrock" {
     resources = ["*"]
   }
 }
+*/
+# ------------------------------------------------------------#
+#  oicd
+# ------------------------------------------------------------#
+
+## ------------------------------------------------------------#
+##  terraform cloud
+## ------------------------------------------------------------#
+/*
+resource "aws_iam_openid_connect_provider" "terraform-cloud" {
+  url = "https://app.terraform.io"
+
+  client_id_list = [
+    "aws.workload.identity",
+  ]
+
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+}
+*/
+## ------------------------------------------------------------#
+##  github actions OIDC
+## ------------------------------------------------------------#
+/*
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = [
+    "sts.amazonaws.com",
+  ]
+
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+}
+*/
 
 # ------------------------------------------------------------#
-#  terraform cloud OIDC
+#  vercel
 # ------------------------------------------------------------#
+/*
+resource "aws_iam_openid_connect_provider" "vercel_bastion" {
+  url = "https://oidc.vercel.com/${local.vercel_team_slug}"
+
+  client_id_list = [
+    "https://vercel.com/${local.vercel_team_slug}",
+  ]
+
+  thumbprint_list = ["00abefd055f9a9c784ffdeabd1dcdd8fed741436"]
+}
+*/
+# ------------------------------------------------------------#
+#  role
+# ------------------------------------------------------------#
+
+## ------------------------------------------------------------#
+##  terraform cloud
+## ------------------------------------------------------------#
 /*
 resource "aws_iam_openid_connect_provider" "terraform-cloud" {
   url = "https://app.terraform.io"
@@ -112,25 +167,15 @@ data "aws_iam_policy_document" "oicd_assume_role_policy" {
   }
 }
 */
-# ------------------------------------------------------------#
-#  github actions OIDC
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  github actions OIDC
+## ------------------------------------------------------------#
 /*
-resource "aws_iam_openid_connect_provider" "github_actions" {
-  url = "https://token.actions.githubusercontent.com"
-
-  client_id_list = [
-    "sts.amazonaws.com",
-  ]
-
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
-}
-*/
 resource "aws_iam_role" "github_actions" {
-  assume_role_policy    = data.aws_iam_policy_document.github_actions_assume_role_policy.json
-  max_session_duration  = "3600"
-  name                  = "${local.PJPrefix}-${local.EnvPrefix}-github-actions-role"
-  path                  = "/"
+  assume_role_policy   = data.aws_iam_policy_document.github_actions_assume_role_policy.json
+  max_session_duration = "3600"
+  name                 = "${local.PJPrefix}-${local.EnvPrefix}-github-actions-role"
+  path                 = "/"
 
 }
 
@@ -170,22 +215,22 @@ data "aws_iam_policy_document" "github_actions" {
   statement {
     effect = "Allow"
     actions = [
-        "lambda:UpdateFunctionCode",
+      "lambda:UpdateFunctionCode",
     ]
     resources = [
       "*"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:CompleteLayerUpload",
-        "ecr:InitiateLayerUpload",
-        "ecr:PutImage",
-        "ecr:UploadLayerPart",
-        "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:CompleteLayerUpload",
+      "ecr:InitiateLayerUpload",
+      "ecr:PutImage",
+      "ecr:UploadLayerPart",
+      "ecr:GetAuthorizationToken",
     ]
     resources = [
       "*"
@@ -198,21 +243,11 @@ resource "aws_iam_role_policy_attachment" "github_actions" {
   role       = aws_iam_role.github_actions.name
   policy_arn = aws_iam_policy.github_actions.arn
 }
+*/
+## ------------------------------------------------------------#
+##  vercel
+## ------------------------------------------------------------#
 /*
-# ------------------------------------------------------------#
-#  vercel OIDC
-# ------------------------------------------------------------#
-
-resource "aws_iam_openid_connect_provider" "vercel_bastion" {
-  url = "https://oidc.vercel.com/${local.vercel_team_slug}"
-
-  client_id_list = [
-    "https://vercel.com/${local.vercel_team_slug}",
-  ]
-
-  thumbprint_list = ["00abefd055f9a9c784ffdeabd1dcdd8fed741436"]
-}
-
 resource "aws_iam_role" "vercel_bastion" {
   assume_role_policy    = data.aws_iam_policy_document.vercel_bastion_assume_role_policy.json
   max_session_duration  = "3600"
