@@ -1,26 +1,30 @@
 terraform {
-/*
+  # local用
+  /*
   backend "local" {
     path = "terraform.tfstate"
   }
 */
+  # terraform cloud用
+  /*
   cloud {
     organization = "nasu-infra"
     workspaces {
       name = "nasu-prod-infra"
     }
   }
-/*
+*/
+  # s3用
   backend "s3" {
     bucket         = "nasu-prod-tfstate"
-    dynamodb_table = "tfstatelock"
+    dynamodb_table = "nasu-prod-tfstatelock"
     encrypt        = true
     key            = "tfstate_backend.tfstate"
     region         = "ap-northeast-1"
     profile        = "nasu-infra"
 
   }
-*/
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -41,9 +45,8 @@ terraform {
       source  = "hashicorp/archive"
       version = "2.5.0"
     }
-    
-  }
 
+  }
 
   required_version = ">= 1.7.3"
 }
@@ -59,9 +62,9 @@ provider "aws" {
   region  = "us-east-1"
   profile = "nasu-infra"
 }
-
-provider "sops" {}
 /*
+provider "sops" {}
+
 data "sops_file" "secrets_api" {
   source_file = "secrets_api.enc.json"
 }
