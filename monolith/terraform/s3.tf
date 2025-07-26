@@ -1,85 +1,10 @@
 # ------------------------------------------------------------#
-#  flow_log
+#  bucket
 # ------------------------------------------------------------#
-/*
-resource "aws_s3_bucket" "vpc-flowlog" {
-  bucket = "${local.PJPrefix}-${local.EnvPrefix}-vpc-flowlog"
-}
 
-resource "aws_s3_bucket_public_access_block" "vpc-flowlog" {
-  bucket                  = aws_s3_bucket.vpc-flowlog.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-data "aws_iam_policy_document" "vpc-flowlog" {
-  statement {
-    sid       = "AWSLogDeliveryWrite"
-    actions   = ["s3:PutObject"]
-    resources = [
-      "${aws_s3_bucket.vpc-flowlog.arn}/AWSLogs/${local.account_id}/*"
-    ]
-    principals {
-      type        = "Service"
-      identifiers = ["delivery.logs.amazonaws.com"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-      values   = [local.account_id]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "s3:x-amz-acl"
-      values   = ["bucket-owner-full-control"]
-    }
-    condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
-      values   = ["arn:aws:logs:ap-northeast-1:${local.account_id}:*"]
-    }
-
-  }
-
-  statement {
-    sid     = "AWSLogDeliveryAclCheck"
-    actions = [
-      "s3:GetBucketAcl",
-      "s3:ListBucket"
-    ]
-    resources = [
-      "${aws_s3_bucket.vpc-flowlog.arn}"
-    ]
-    principals {
-      type        = "Service"
-      identifiers = ["delivery.logs.amazonaws.com"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-      values   = [local.account_id]
-    }
-    condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
-      values   = ["arn:aws:logs:ap-northeast-1:${local.account_id}:*"]
-    }
-
-  }
-
-}
-
-resource "aws_s3_bucket_policy" "vpc-flowlog" {
-  bucket = aws_s3_bucket.vpc-flowlog.id
-  policy = data.aws_iam_policy_document.vpc-flowlog.json
-}
-*/
-
-# ------------------------------------------------------------#
-#  tfstate
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  tfstate
+## ------------------------------------------------------------#
 
 resource "aws_s3_bucket" "tfstate" {
   bucket = "${local.PJPrefix}-${local.EnvPrefix}-tfstate"
@@ -153,29 +78,24 @@ resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
 
 }
 
-# ------------------------------------------------------------#
-#  ssm log
-# ------------------------------------------------------------#
-
-resource "aws_s3_bucket" "ssm_log" {
-  bucket = "${local.PJPrefix}-${local.EnvPrefix}-ssm-log"
-
-  lifecycle {
-    prevent_destroy = true
-  }
-
+## ------------------------------------------------------------#
+##  synthetics
+## ------------------------------------------------------------#
+/*
+resource "aws_s3_bucket" "synthetics" {
+  bucket = "${local.PJPrefix}-${local.EnvPrefix}-synthetics-reports"
 }
 
-resource "aws_s3_bucket_public_access_block" "ssm_log" {
-  bucket                  = aws_s3_bucket.ssm_log.id
+resource "aws_s3_bucket_public_access_block" "synthetics" {
+  bucket                  = aws_s3_bucket.synthetics.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "ssm_log" {
-  bucket = aws_s3_bucket.ssm_log.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "synthetics" {
+  bucket = aws_s3_bucket.synthetics.id
 
   rule {
     bucket_key_enabled = false
@@ -186,79 +106,29 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "ssm_log" {
   }
 }
 
-# ------------------------------------------------------------#
-#  access_log
-# ------------------------------------------------------------#
-
-resource "aws_s3_bucket" "alb_access_log" {
-  bucket = "${local.PJPrefix}-${local.EnvPrefix}-alb-access-log"
-}
-
-resource "aws_s3_bucket_public_access_block" "alb_access_log" {
-  bucket                  = aws_s3_bucket.alb_access_log.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-data "aws_iam_policy_document" "alb_access_log" {
-  statement {
-    actions = ["s3:PutObject"]
-    resources = [
-      "${aws_s3_bucket.alb_access_log.arn}/*",
-      "${aws_s3_bucket.alb_access_log.arn}"
-    ]
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::582318560864:root"]
-    }
+resource "aws_s3_bucket_versioning" "synthetics" {
+  bucket = aws_s3_bucket.synthetics.bucket
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_policy" "alb_access_log" {
-  bucket = aws_s3_bucket.alb_access_log.id
-  policy = data.aws_iam_policy_document.alb_access_log.json
-}
-
-# ------------------------------------------------------------#
-#  athena result
-# ------------------------------------------------------------#
-/*
-resource "aws_s3_bucket" "athena_result" {
-  bucket = "${local.PJPrefix}-${local.EnvPrefix}-athna-result"
-}
-
-resource "aws_s3_bucket_public_access_block" "athena_result" {
-  bucket                  = aws_s3_bucket.athena_result.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "athena_result" {
-
-  bucket = aws_s3_bucket.athena_result.id
-
+resource "aws_s3_bucket_lifecycle_configuration" "synthetics" {
+  bucket = aws_s3_bucket.synthetics.bucket
   rule {
-    id = "${local.PJPrefix}-${local.EnvPrefix}-athna-result-lc-rule"
+    id = "config"
 
-    filter {}
-
-    expiration {
-      days                         = 1
-      expired_object_delete_marker = false
+    noncurrent_version_expiration {
+      noncurrent_days = 5
     }
 
     status = "Enabled"
   }
-
 }
 */
-# ------------------------------------------------------------#
-#  cloudtrail log
-# ------------------------------------------------------------#
+## ------------------------------------------------------------#
+##  cloudtrail log
+## ------------------------------------------------------------#
 
 resource "aws_s3_bucket" "cloudtrail_log" {
   bucket = "${local.PJPrefix}-${local.EnvPrefix}-cloudtrail-log"
@@ -393,7 +263,187 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail_log_management_even
   }
 
 }
+## ------------------------------------------------------------#
+##  flow_log
+## ------------------------------------------------------------#
+/*
+resource "aws_s3_bucket" "vpc-flowlog" {
+  bucket = "${local.PJPrefix}-${local.EnvPrefix}-vpc-flowlog"
+}
 
+resource "aws_s3_bucket_public_access_block" "vpc-flowlog" {
+  bucket                  = aws_s3_bucket.vpc-flowlog.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+data "aws_iam_policy_document" "vpc-flowlog" {
+  statement {
+    sid       = "AWSLogDeliveryWrite"
+    actions   = ["s3:PutObject"]
+    resources = [
+      "${aws_s3_bucket.vpc-flowlog.arn}/AWSLogs/${local.account_id}/*"
+    ]
+    principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [local.account_id]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:logs:ap-northeast-1:${local.account_id}:*"]
+    }
+
+  }
+
+  statement {
+    sid     = "AWSLogDeliveryAclCheck"
+    actions = [
+      "s3:GetBucketAcl",
+      "s3:ListBucket"
+    ]
+    resources = [
+      "${aws_s3_bucket.vpc-flowlog.arn}"
+    ]
+    principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [local.account_id]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:logs:ap-northeast-1:${local.account_id}:*"]
+    }
+
+  }
+
+}
+
+resource "aws_s3_bucket_policy" "vpc-flowlog" {
+  bucket = aws_s3_bucket.vpc-flowlog.id
+  policy = data.aws_iam_policy_document.vpc-flowlog.json
+}
+*/
+
+## ------------------------------------------------------------#
+##  athena result
+## ------------------------------------------------------------#
+/*
+resource "aws_s3_bucket" "athena_result" {
+  bucket = "${local.PJPrefix}-${local.EnvPrefix}-athna-result"
+}
+
+resource "aws_s3_bucket_public_access_block" "athena_result" {
+  bucket                  = aws_s3_bucket.athena_result.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "athena_result" {
+
+  bucket = aws_s3_bucket.athena_result.id
+
+  rule {
+    id = "${local.PJPrefix}-${local.EnvPrefix}-athna-result-lc-rule"
+
+    filter {}
+
+    expiration {
+      days                         = 1
+      expired_object_delete_marker = false
+    }
+
+    status = "Enabled"
+  }
+}
+*/
+## ------------------------------------------------------------#
+##  ssm log
+## ------------------------------------------------------------#
+
+resource "aws_s3_bucket" "ssm_log" {
+  bucket = "${local.PJPrefix}-${local.EnvPrefix}-ssm-log"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+}
+
+resource "aws_s3_bucket_public_access_block" "ssm_log" {
+  bucket                  = aws_s3_bucket.ssm_log.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "ssm_log" {
+  bucket = aws_s3_bucket.ssm_log.id
+
+  rule {
+    bucket_key_enabled = false
+
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+## ------------------------------------------------------------#
+##  access_log
+## ------------------------------------------------------------#
+/*
+resource "aws_s3_bucket" "access-log" {
+  bucket = "${local.PJPrefix}-${local.EnvPrefix}-access-log"
+}
+
+resource "aws_s3_bucket_public_access_block" "access-log" {
+  bucket                  = aws_s3_bucket.access-log.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+data "aws_iam_policy_document" "access-log" {
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = [
+      "${aws_s3_bucket.access-log.arn}/*",
+      "${aws_s3_bucket.access-log.arn}"
+    ]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::582318560864:root"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "access_log" {
+  bucket = aws_s3_bucket.access-log.id
+  policy = data.aws_iam_policy_document.access-log.json
+}
+*/
 # ------------------------------------------------------------#
 #  s3_access_grant 
 # ------------------------------------------------------------#
@@ -535,50 +585,3 @@ resource "aws_iam_role_policy_attachment" "s3_access_grant" {
   policy_arn = aws_iam_policy.s3_access_grant.arn
 }
 */
-# ------------------------------------------------------------#
-#  synthetics
-# ------------------------------------------------------------#
-
-resource "aws_s3_bucket" "synthetics" {
-  bucket = "${local.PJPrefix}-${local.EnvPrefix}-synthetics-reports"
-}
-
-resource "aws_s3_bucket_public_access_block" "synthetics" {
-  bucket                  = aws_s3_bucket.synthetics.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "synthetics" {
-  bucket = aws_s3_bucket.synthetics.id
-
-  rule {
-    bucket_key_enabled = false
-
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-resource "aws_s3_bucket_versioning" "synthetics" {
-  bucket = aws_s3_bucket.synthetics.bucket
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "synthetics" {
-  bucket = aws_s3_bucket.synthetics.bucket
-  rule {
-    id = "config"
-
-    noncurrent_version_expiration {
-      noncurrent_days = 5
-    }
-
-    status = "Enabled"
-  }
-}
