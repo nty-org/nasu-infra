@@ -78,7 +78,7 @@ resource "aws_iam_role_policy_attachment" "eventbridge_scheduler" {
 ## ------------------------------------------------------------#
 ##  eventbridge rule sns target
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_iam_role" "eventbridge_rule_sns_target" {
   assume_role_policy    = data.aws_iam_policy_document.eventbridge_rule_sns_target_assume_role_policy.json
   max_session_duration  = "3600"
@@ -122,7 +122,67 @@ resource "aws_iam_role_policy_attachment" "eventbridge_rule_sns_target" {
   role       = aws_iam_role.eventbridge_rule_sns_target.name
   policy_arn = aws_iam_policy.eventbridge_rule_sns_target.arn
 }
+*/
+## ------------------------------------------------------------#
+##  ecs scheduled task role
+## ------------------------------------------------------------#
+/*
+resource "aws_iam_role" "ecs_scheduled_task" {
+  assume_role_policy    = data.aws_iam_policy_document.ecs_scheduled_task_assume_role_policy.json
+  max_session_duration  = "3600"
+  name                  = "${local.PJPrefix}-${local.EnvPrefix}-ecs-scheduled-task-role"
+  path                  = "/service-role/"
+}
 
+data "aws_iam_policy_document" "ecs_scheduled_task_assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "ecs_scheduled_task" {
+  name   = "${local.PJPrefix}-${local.EnvPrefix}-ecs-scheduled-task-policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.ecs_scheduled_task.json
+}
+
+data "aws_iam_policy_document" "ecs_scheduled_task" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:PassRole",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecs:RunTask",
+    ]
+    resources = [
+      "${aws_ecs_task_definition.daily_update_sessions_success.arn_without_revision}:*",
+      "*",
+    ]
+  }
+
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_scheduled_task" {
+  role       = aws_iam_role.ecs_scheduled_task.name
+  policy_arn = aws_iam_policy.ecs_scheduled_task.arn
+}
+*/
 # ------------------------------------------------------------#
 #  eventbrige scheduler
 # ------------------------------------------------------------#
@@ -341,7 +401,6 @@ resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_notification" {
 /*
 resource "aws_cloudwatch_log_group" "rds_instance_abnormal_operation" {
   name = "/aws/events/${local.PJPrefix}-${local.EnvPrefix}-rds-instance-abnormal-operation"
-
 }
 
 resource "aws_cloudwatch_event_rule" "rds_instance_abnormal_operation" {
@@ -457,78 +516,18 @@ resource "aws_cloudwatch_event_target" "rds_cluster_abnormal_operation_notificat
 # ------------------------------------------------------------#
 
 ## ------------------------------------------------------------#
-##  ecs scheduled task role
+##  ecs scheduled task rule
 ## ------------------------------------------------------------#
 /*
-resource "aws_iam_role" "ecs_scheduled_task" {
-  assume_role_policy    = data.aws_iam_policy_document.ecs_scheduled_task_assume_role_policy.json
-  max_session_duration  = "3600"
-  name                  = "${local.PJPrefix}-${local.EnvPrefix}-ecs-scheduled-task-role"
-  path                  = "/"
-}
-
-data "aws_iam_policy_document" "ecs_scheduled_task_assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = [
-      "sts:AssumeRole"
-    ]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_policy" "ecs_scheduled_task" {
-  name   = "${local.PJPrefix}-${local.EnvPrefix}-ecs-scheduled-task-policy"
-  path   = "/"
-  policy = data.aws_iam_policy_document.ecs_scheduled_task.json
-}
-
-data "aws_iam_policy_document" "ecs_scheduled_task" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "iam:PassRole",
-    ]
-    resources = [
-      "*",
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecs:RunTask",
-    ]
-    resources = [
-      "${aws_ecs_task_definition.daily_update_sessions_success.arn_without_revision}:*",
-      "*",
-    ]
-  }
-
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_scheduled_task" {
-  role       = aws_iam_role.ecs_scheduled_task.name
-  policy_arn = aws_iam_policy.ecs_scheduled_task.arn
-}
-
-# ------------------------------------------------------------#
-#  ecs scheduled task rule
-# ------------------------------------------------------------#
-
 resource "aws_cloudwatch_event_rule" "ecs_scheduled_task" {
-  name                = "${local.PJPrefix}-${local.EnvPrefix}-daily-update-sessions-success"
+  name                = "${local.PJPrefix}-${local.EnvPrefix}-ecs-scheduled-task"
   schedule_expression = "cron(13 2 ? * SUN *)"
   state               = "ENABLED"
 }
 
 
 resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
-  target_id = "${local.PJPrefix}-${local.EnvPrefix}-daily-update-sessions-success"
+  target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-scheduled-task"
   arn       = aws_ecs_cluster.this.arn
   rule      = aws_cloudwatch_event_rule.ecs_scheduled_task.name
   role_arn  = aws_iam_role.ecs_scheduled_task.arn
@@ -540,7 +539,7 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
     platform_version    = "1.4.0"
     network_configuration {
       assign_public_ip = false
-      security_groups  = [aws_security_group.private.id,"sg-0e737a79a698834f6"]
+      security_groups  = [aws_security_group.private.id]
       subnets          = data.aws_subnets.private.ids
     }
   }
