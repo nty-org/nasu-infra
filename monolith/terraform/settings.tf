@@ -52,12 +52,12 @@ terraform {
 
 
 provider "aws" {
-  region  = "ap-northeast-1"
+  region = "ap-northeast-1"
 }
 
 provider "aws" {
-  alias   = "virginia"
-  region  = "us-east-1"
+  alias  = "virginia"
+  region = "us-east-1"
 }
 /*
 provider "sops" {}
@@ -76,7 +76,7 @@ data "sops_file" "secrets_monitoring" {
 */
 
 provider "awscc" {
-  region  = "ap-northeast-1"
+  region = "ap-northeast-1"
 }
 
 provider "archive" {}
