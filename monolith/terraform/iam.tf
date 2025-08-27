@@ -134,7 +134,17 @@ resource "aws_iam_openid_connect_provider" "terraform-cloud" {
 ## ------------------------------------------------------------#
 ##  github actions OIDC
 ## ------------------------------------------------------------#
+/*
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url = "https://token.actions.githubusercontent.com"
 
+  client_id_list = [
+    "sts.amazonaws.com",
+  ]
+
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+}
+*/
 data "http" "github_actions_openid_configuration" {
   url = "https://token.actions.githubusercontent.com/.well-known/openid-configuration"
 }
@@ -374,7 +384,7 @@ data "aws_iam_policy_document" "github_actions_terraform_plan_assume_role_policy
       type        = "Federated"
       identifiers = [aws_iam_openid_connect_provider.github_actions.arn]
     }
-    
+
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:aud"

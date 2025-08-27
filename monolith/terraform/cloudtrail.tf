@@ -5,7 +5,7 @@
 ##------------------------------------------------------------#
 ##  cloudtrail
 ## ------------------------------------------------------------#
-/*
+
 resource "aws_iam_role" "cloudtrail" {
   assume_role_policy   = data.aws_iam_policy_document.cloudtrail_assume_role_policy.json
   max_session_duration = "3600"
@@ -54,7 +54,7 @@ resource "aws_iam_role_policy_attachment" "cloudtrail" {
   role       = aws_iam_role.cloudtrail.name
   policy_arn = aws_iam_policy.cloudtrail.arn
 }
-*/
+
 # ------------------------------------------------------------#
 #  trail
 # ------------------------------------------------------------#
@@ -116,42 +116,42 @@ resource "aws_cloudwatch_log_group" "cloudtrail_s3" {
 ## ------------------------------------------------------------#
 ##  management event
 ## ------------------------------------------------------------#
-/*
+
 resource "aws_cloudtrail" "management_event" {
-  depends_on     = [
+  depends_on = [
     aws_s3_bucket.cloudtrail_log,
     aws_kms_key.cloudtrail
   ]
 
-  name                          = "${local.PJPrefix}-${local.EnvPrefix}-management-event"
-  s3_bucket_name                = aws_s3_bucket.cloudtrail_log.id
-  s3_key_prefix                 = "management-event"
-  kms_key_id                    = aws_kms_key.cloudtrail.arn
-  
+  name           = "${local.PJPrefix}-${local.EnvPrefix}-management-event"
+  s3_bucket_name = aws_s3_bucket.cloudtrail_log.id
+  s3_key_prefix  = "management-event"
+  kms_key_id     = aws_kms_key.cloudtrail.arn
+
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.cloudtrail_management_event.arn}:*"
-  cloud_watch_logs_role_arn  = "${aws_iam_role.cloudtrail.arn}"
-  
+  cloud_watch_logs_role_arn  = aws_iam_role.cloudtrail.arn
+
   enable_log_file_validation    = true
   include_global_service_events = true
   is_multi_region_trail         = true
-  
-  enable_logging                = true
-  
+
+  enable_logging = true
+
   advanced_event_selector {
     name = "管理イベントセレクター"
-    
+
     field_selector {
       field  = "eventCategory"
       equals = ["Management"]
     }
-    
+
     field_selector {
       field  = "readOnly"
       equals = ["false"]
     }
 
     field_selector {
-      field      = "eventSource"
+      field = "eventSource"
       not_equals = [
         "kms.amazonaws.com",
         "rdsdata.amazonaws.com"
@@ -159,14 +159,14 @@ resource "aws_cloudtrail" "management_event" {
     }
 
   }
-  
+
 }
 
 resource "aws_cloudwatch_log_group" "cloudtrail_management_event" {
   name = "/cloudtrail/${local.PJPrefix}-${local.EnvPrefix}-management-event"
 
 }
-
+/*
 resource "aws_cloudwatch_log_metric_filter" "ecs_exec" {
 
   name           = "${local.PJPrefix}-${local.EnvPrefix}-ecs-exec"
