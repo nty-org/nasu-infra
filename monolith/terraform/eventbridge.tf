@@ -78,17 +78,17 @@ resource "aws_iam_role_policy_attachment" "eventbridge_scheduler" {
 ## ------------------------------------------------------------#
 ##  eventbridge rule sns target
 ## ------------------------------------------------------------#
-/*
+
 resource "aws_iam_role" "eventbridge_rule_sns_target" {
-  assume_role_policy    = data.aws_iam_policy_document.eventbridge_rule_sns_target_assume_role_policy.json
-  max_session_duration  = "3600"
-  name                  = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-rule-sns-target-role"
-  path                  = "/service-role/"
+  assume_role_policy   = data.aws_iam_policy_document.eventbridge_rule_sns_target_assume_role_policy.json
+  max_session_duration = "3600"
+  name                 = "${local.PJPrefix}-${local.EnvPrefix}-eventbridge-rule-sns-target-role"
+  path                 = "/service-role/"
 }
 
 data "aws_iam_policy_document" "eventbridge_rule_sns_target_assume_role_policy" {
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "sts:AssumeRole"
     ]
@@ -122,7 +122,7 @@ resource "aws_iam_role_policy_attachment" "eventbridge_rule_sns_target" {
   role       = aws_iam_role.eventbridge_rule_sns_target.name
   policy_arn = aws_iam_policy.eventbridge_rule_sns_target.arn
 }
-*/
+
 ## ------------------------------------------------------------#
 ##  ecs scheduled task role
 ## ------------------------------------------------------------#
@@ -335,15 +335,20 @@ resource "aws_scheduler_schedule" "ecs_stop" {
 ## ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_log_group" "ecs_abnormal_stop" {
-  name = "/aws/events/${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop"
+  for_each = toset(["api", "worker"])
+  
+  name              = "/aws/events/${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop"
+  retention_in_days = 30
 
   tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-flask"
+    Service = "${local.PJPrefix}-${local.EnvPrefix}-${each.key}"
   }
 }
 
 resource "aws_cloudwatch_event_rule" "ecs_abnormal_stop" {
-  name                = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop"
+  for_each = toset(["api", "worker"])
+  
+  name                = "${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop"
   event_pattern = <<-EOT
   {
     "source": [
@@ -363,7 +368,7 @@ resource "aws_cloudwatch_event_rule" "ecs_abnormal_stop" {
         "stoppedReason": [{ "anything-but": { "prefix": "Scaling activity initiated by (deployment ecs-svc" } }]
       }],
       "lastStatus": ["STOPPED"], 
-      "taskDefinitionArn" : [{ "prefix": "${aws_ecs_task_definition.flask.arn_without_revision}"}]
+      "taskDefinitionArn" : [{ "prefix": "arn:aws:ecs:ap-northeast-1:${local.account_id}:task-definition/${local.PJPrefix}-${local.EnvPrefix}-${each.key}-fargate-task:2"}]
     }
   }
   EOT
@@ -371,27 +376,230 @@ resource "aws_cloudwatch_event_rule" "ecs_abnormal_stop" {
 }
 
 resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_log" {
-  depends_on     = [
-    aws_cloudwatch_event_rule.ecs_abnormal_stop,
-    aws_cloudwatch_log_group.ecs_abnormal_stop
-  ]
+  for_each = toset(["api", "worker"])
   
-  target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop-log"
-  rule      = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop"
-  arn       = aws_cloudwatch_log_group.ecs_abnormal_stop.arn
+  target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop-log"
+  rule      = aws_cloudwatch_event_rule.ecs_abnormal_stop[each.key].name
+  arn       = aws_cloudwatch_log_group.ecs_abnormal_stop[each.key].arn
 
 }
 
 resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_notification" {
-  depends_on     = [
-    aws_cloudwatch_event_rule.ecs_abnormal_stop,
-    aws_cloudwatch_log_group.ecs_abnormal_stop
-  ]
+  for_each = toset(["api", "worker"])
   
-  target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop-notification"
-  rule      = "${local.PJPrefix}-${local.EnvPrefix}-ecs-flask-abnormal-stop"
+  target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop-notification"
+  rule      = aws_cloudwatch_event_rule.ecs_abnormal_stop[each.key].name
   arn       = aws_sns_topic.slack.arn
   role_arn  = aws_iam_role.eventbridge_rule_sns_target.arn
+  
+  input_transformer {
+    input_paths = {
+      # イベント基本情報
+      "account"    = "$.account"
+      "region"     = "$.region"
+      "id"         = "$.id"
+      "time"       = "$.time"
+      "detailType" = "$.detail-type"
+      
+      # ECSリソース情報
+      "clusterArn"       = "$.detail.clusterArn"
+      "taskArn"          = "$.detail.taskArn"
+      "taskDefinitionArn" = "$.detail.taskDefinitionArn"
+      
+      # 停止関連情報
+      "stoppedReason" = "$.detail.stoppedReason"
+      "stoppedCode"   = "$.detail.stopCode"
+      
+      # コンテナ情報
+      "exitCode"    = "$.detail.containers[0].exitCode"
+      "containers"  = "$.detail.containers"
+    }
+
+    input_template = <<EOF
+      {
+        "version": "1.0",
+        "source": "custom",
+        "content": {
+          "title": ":rotating_light: <detailType> | ${local.PJPrefix}-${local.EnvPrefix} | <region> | Account: <account>",
+          "textType": "client-markdown",
+          "description": "*ECS Abnormal Stop Detection | ${local.PJPrefix}-${local.EnvPrefix} | <region> | Account: <account>*\n\n\n# *Information*\n\n・ *Service*:  ${local.PJPrefix}-${local.EnvPrefix}-${each.key}-service\n・ *Time*:  <time>\n・ *Account*:  <account>\n\n\n# *Stop Reason*\n\n・ *Stopped Reason*:  <stoppedReason>\n・ *Stopped Code*:  <stoppedCode>\n・ *Exit Code*:  <exitCode>\n\n\n# *Task Information*\n\n・ *Task*: `<taskArn>`\n・ *Task Definition*: `<taskDefinitionArn>`\n・ *Cluster*: `<clusterArn>`",
+          "nextSteps": [
+            "*Check logs*: Review CloudWatch Logs at `/aws/ecs/${local.PJPrefix}-${local.EnvPrefix}-${each.key}`",
+            "*Memory/CPU*: Verify resource Metrics in CloudWatch Metrics",
+            "*Permissions*: Check task execution role and task role permissions at `${local.PJPrefix}-${local.EnvPrefix}-ecs-task-role`",
+            "*Dependent services*: Verify status of related RDS/Redis/OpenSearch and other dependencies"
+          ]
+        }, 
+        "metadata": {
+          "Service": "${local.PJPrefix}-${local.EnvPrefix}-${each.key}-service",
+          "Environment": "${local.PJPrefix}-${local.EnvPrefix}",
+          "Region": "<region>",
+          "Exit code": "<exitCode>",
+          "Stop reason": "<stoppedReason>",
+          "Stop code": "<stoppedCode>",
+          "Event time": "<time>",
+          "Event ID": "<id>"
+        }
+      }
+    EOF
+  }
+
+}
+*/
+## ------------------------------------------------------------#
+##  ecs exec start
+## ------------------------------------------------------------#
+/*
+resource "aws_cloudwatch_log_group" "ecs_exec_start" {
+  name              = "/aws/events/${local.PJPrefix}-${local.EnvPrefix}-ecs-exec-start"
+  retention_in_days = 30
+  
+}
+
+resource "aws_cloudwatch_event_rule" "ecs_exec_start" {
+  name                = "${local.PJPrefix}-${local.EnvPrefix}-ecs-exec-start"
+  event_pattern = <<-EOT
+  {
+    "source": [
+      "aws.ecs"
+    ],
+    "detail-type": [
+      "AWS API Call via CloudTrail"
+    ],
+    "detail": {
+      "eventSource": ["ecs.amazonaws.com"],
+      "eventName": ["ExecuteCommand"]
+    }
+  }
+  EOT
+  state               = "ENABLED"
+}
+
+resource "aws_cloudwatch_event_target" "ecs_exec_start_notification" {
+  target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-exec-start-notification"
+  rule      = aws_cloudwatch_event_rule.ecs_exec_start.name
+  arn       = aws_sns_topic.slack.arn
+  role_arn  = aws_iam_role.eventbridge_rule_sns_target.arn
+
+  input_transformer {
+    input_paths = {
+      # イベント基本情報
+      "account"    = "$.account"
+      "region"     = "$.region"
+      "id"         = "$.id"
+      "time"       = "$.time"
+      "detailType" = "$.detail-type"
+      
+      # ユーザー情報
+      "userName" = "$.detail.userIdentity.userName"
+      "arn"      = "$.detail.userIdentity.arn"
+      
+      # セッション情報
+      "cluster"   = "$.detail.requestParameters.cluster"
+      "container" = "$.detail.requestParameters.container"
+      "task"      = "$.detail.requestParameters.task"
+      
+    }
+    
+    input_template = <<EOF
+      {
+        "version": "1.0",
+        "source": "custom",
+        "content": {
+          "title": ":rotating_light: ECS Exec Start | ${local.PJPrefix}-${local.EnvPrefix} | <region> | Account: <account>",
+          "textType": "client-markdown",
+          "description": "*ECS Exec Start | ${local.PJPrefix}-${local.EnvPrefix} | <region> | Account: <account>*\n\n\n# *Information*\n\n・ *Environment*:  `${local.PJPrefix}-${local.EnvPrefix}`\n・ *Time*:  `<time>`\n・ *Account*:  `<account>`\n\n\n# *User Information*\n\n・ *User Name*: `<userName>`\n・ *Arn*: `<arn>`\n\n\n# *Session Information*\n\n・ *Cluster*: `<cluster>`\n・ *Task*: `<task>`\n・ *Container*: `<container>`",
+          "nextSteps": [
+            "*Verify access*: Confirm that ECS Exec access was appropriate"
+          ]
+        }, 
+        "metadata": {
+          "Environment": "${local.PJPrefix}-${local.EnvPrefix}",
+          "Region": "<region>",
+          "Event time": "<time>",
+          "Event ID": "<id>"
+        }
+      }
+    EOF
+  }
+  
+}
+
+## ------------------------------------------------------------#
+##  ecs exec stop
+## ------------------------------------------------------------#
+
+resource "aws_cloudwatch_log_group" "ecs_exec_stop" {
+  name              = "/aws/events/${local.PJPrefix}-${local.EnvPrefix}-ecs-exec-stop"
+  retention_in_days = 30
+  
+}
+
+resource "aws_cloudwatch_event_rule" "ecs_exec_stop" {
+  name                = "${local.PJPrefix}-${local.EnvPrefix}-ecs-exec-stop"
+  event_pattern = <<-EOT
+  {
+    "source": [
+      "aws.logs"
+    ],
+    "detail-type": [
+      "AWS API Call via CloudTrail"
+    ],
+    "detail": {
+      "eventSource": ["logs.amazonaws.com"],
+      "eventName": ["CreateLogStream"],
+      "requestParameters": {
+        "logStreamName": [{
+          "prefix": "ecs-execute-command-"
+        }]
+      }
+    }
+  }
+  EOT
+  state               = "ENABLED"
+}
+
+resource "aws_cloudwatch_event_target" "ecs_exec_stop_notification" {
+  target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-exec-stop-notification"
+  rule      = aws_cloudwatch_event_rule.ecs_exec_stop.name
+  arn       = aws_sns_topic.slack.arn
+  role_arn  = aws_iam_role.eventbridge_rule_sns_target.arn
+
+  input_transformer {
+    input_paths = {
+      # イベント基本情報
+      "account"    = "$.account"
+      "region"     = "$.region"
+      "id"         = "$.id"
+      "time"       = "$.time"
+      "detailType" = "$.detail-type"
+      
+      # ログ情報
+      "logGroupName"  = "$.detail.requestParameters.logGroupName"
+      "logStreamName" = "$.detail.requestParameters.logStreamName"
+    }
+    
+    input_template = <<EOF
+      {
+        "version": "1.0",
+        "source": "custom",
+        "content": {
+          "title": ":rotating_light: ECS Exec Stop | ${local.PJPrefix}-${local.EnvPrefix} | <region> | Account: <account>",
+          "textType": "client-markdown",
+          "description": "*ECS Exec Stop | ${local.PJPrefix}-${local.EnvPrefix} | <region> | Account: <account>*\n\n\n# *Information*\n\n・ *Environment*:  `${local.PJPrefix}-${local.EnvPrefix}`\n・ *Time*:  `<time>`\n・ *Account*:  `<account>`\n\n\n# *Log Information*\n\n・ *Log Group Name*: `<logGroupName>`\n・ *Log Stream Name*: `<logStreamName>`",
+          "nextSteps": [
+            "*Check logs*: Review CloudWatch Logs at `<logGroupName>/<logStreamName>`"
+          ]
+        }, 
+        "metadata": {
+          "Environment": "${local.PJPrefix}-${local.EnvPrefix}",
+          "Region": "<region>",
+          "Event time": "<time>",
+          "Event ID": "<id>"
+        }
+      }
+    EOF
+  }
 
 }
 */
