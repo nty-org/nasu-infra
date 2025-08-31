@@ -29,8 +29,8 @@ resource "aws_rds_cluster" "this" {
   vpc_security_group_ids = [data.aws_security_group.private.id]
   #manage_master_user_password = true
 
-  master_username   = "postgres"
-  master_password   = "sdfasjijdsia"
+  master_username   = ""
+  master_password   = ""
   port              = "5432"
   storage_encrypted = true
 
@@ -100,9 +100,9 @@ resource "aws_rds_cluster" "this" {
   vpc_security_group_ids = [data.aws_security_group.private.id]
 
 
-  database_name     = "emomildb"
-  master_username   = "postgres"
-  master_password   = "Fa7zQX9euAOsCQXz"
+  database_name     = ""
+  master_username   = ""
+  master_password   = ""
   port              = "5432"
   
 
