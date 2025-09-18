@@ -1,3 +1,26 @@
+data "aws_caller_identity" "current" {}
+
+
+# -------------------------------------------------------------#
+#  network
+# -------------------------------------------------------------#
+module "network" {
+  source      = "../../modules/network"
+  pj_prefix   = "nasu"
+  env_prefix  = "test"
+  account_id  = data.aws_caller_identity.current.account_id
+  vpc_cidr    = "10.2.0.0/16"
+  azs         = ["ap-northeast-1a", "ap-northeast-1c", "ap-northeast-1d"]
+  azs_suffix  = ["a", "c", "d"]
+  subnets = {
+    public  = ["10.2.0.0/20", "10.2.16.0/20", "10.2.32.0/20"]
+    private = ["10.2.48.0/20", "10.2.64.0/20", "10.2.80.0/20"]
+  }
+}
+
+# -------------------------------------------------------------#
+#  network
+# -------------------------------------------------------------#
 /*
 module "sre_nightstop" {
   source = "../../modules/sre/night-stop"
