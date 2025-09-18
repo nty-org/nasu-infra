@@ -29,6 +29,17 @@ module "api_acm" {
 }
 
 # -------------------------------------------------------------#
+#  ecs role
+# -------------------------------------------------------------#
+
+module "ecs_role" {
+  source = "../../modules/ecs-role"
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  account_id = data.aws_caller_identity.current.account_id
+}
+
+# -------------------------------------------------------------#
 #  sre
 # -------------------------------------------------------------#
 /*
