@@ -86,6 +86,23 @@ module "api_ecs_app" {
 }
 
 # -------------------------------------------------------------#
+#  route53
+# -------------------------------------------------------------#
+
+module "api_route53" {
+  source = "../../modules/route53"
+  # common
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  app_name   = "api"
+
+  # route53
+  zone_name = local.zone_name
+  dns_name  = module.api_ecs_app.dns_name
+  zone_id   = module.api_ecs_app.zone_id
+}
+
+# -------------------------------------------------------------#
 #  sre
 # -------------------------------------------------------------#
 /*
