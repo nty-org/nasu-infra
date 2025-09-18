@@ -18,7 +18,7 @@ module "network" {
 }
 
 # -------------------------------------------------------------#
-#  domain
+#  acm
 # -------------------------------------------------------------#
 
 module "api_acm" {
@@ -47,6 +47,42 @@ module "ecs_cluster" {
   source = "../../modules/ecs-cluster"
   pj_prefix  = local.pj_prefix
   env_prefix = local.env_prefix
+}
+
+# -------------------------------------------------------------#
+#  ecs app
+# -------------------------------------------------------------#
+
+module "api_ecs_app" {
+  source = "../../modules/ecs-app"
+  # common
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  app_name   = "api"
+  account_id = data.aws_caller_identity.current.account_id
+
+  # alb
+  public_subnet_ids        = module.network.public_subnet_ids
+  public_security_group_id = module.network.public_security_group_id
+  health_check_path        = "/"
+  certificate_arn          = module.api_acm.certificate_arn
+  vpc_id                   = module.network.vpc_id
+
+  # ecs
+  cluster = module.ecs_cluster.cluster
+  private_subnet_ids = module.network.private_subnet_ids
+  private_security_group_id = module.network.private_security_group_id
+
+  execution_role_arn = module.ecs_role.execution_role_arn
+  task_role_arn      = module.ecs_role.task_role_arn
+  container_cpu      = 512
+  container_memory   = 1024
+  task_cpu           = 512
+  task_memory        = 1024
+  desired_count      = 1
+
+  # ssm
+  server_env = "develop"
 }
 
 # -------------------------------------------------------------#
