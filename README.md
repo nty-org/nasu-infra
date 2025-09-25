@@ -1,5 +1,8 @@
 # nasu-infra
 
+## Githubの草について
+Githubの草については[こちら](https://github.com/NasuTaiyo?tab=overview&from=2024-12-01&to=2024-12-31)をご覧ください。
+
 ## 目次
 
 - [nasu-infra](#nasu-infra)
