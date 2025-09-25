@@ -1,12 +1,10 @@
 # nasu-infra
 
-## Githubの草について
-Githubの草については[こちら](https://github.com/NasuTaiyo?tab=overview&from=2024-12-01&to=2024-12-31)をご覧ください。
-
 ## 目次
 
 - [nasu-infra](#nasu-infra)
   - [目次](#目次)
+  - [Githubの草について](#Githubの草について)
   - [使用技術一覧](#使用技術一覧)
   - [環境構築](#環境構築)
     - [事前にインストールするもの](#事前にインストールするもの)
@@ -14,7 +12,8 @@ Githubの草については[こちら](https://github.com/NasuTaiyo?tab=overview
   - [開発時に利用するコマンド一覧](#開発時に利用するコマンド一覧)
   - [Git 運用ルール](#git-運用ルール)
 
-
+## Githubの草について
+Githubの草については[こちら](https://github.com/NasuTaiyo?tab=overview&from=2024-12-01&to=2024-12-31)をご覧ください。
 
 ## 使用技術一覧
 
