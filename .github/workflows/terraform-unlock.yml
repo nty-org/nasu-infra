@@ -85,12 +85,12 @@ jobs:
         if: env.unlock_needed == 'false'
         run: |
           cat > unlock.md <<EOF
-# 🔓 Terraform Unlock Result
+          # 🔓 Terraform Unlock Result
 
-✅ No lock found in DynamoDB table ${TF_LOCK_TABLE}
+          ✅ No lock found in DynamoDB table ${TF_LOCK_TABLE}
 
-_No action needed._
-EOF
+          _No action needed._
+          EOF
 
       - name: Force Unlock if Needed
         if: env.unlock_needed == 'true'
