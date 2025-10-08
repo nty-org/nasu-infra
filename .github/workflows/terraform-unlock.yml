@@ -89,8 +89,8 @@ jobs:
           UNLOCK_OUTPUT="_No action needed._"
 
           export STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
-          envsubst < .github/templates/unlock.md > unlock.md
-          
+          envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
+
       - name: Force Unlock if Needed
         if: env.unlock_needed == 'true'
         run: |
@@ -108,7 +108,7 @@ jobs:
           fi
 
           export LOCK_ID STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
-          envsubst < .github/templates/unlock.md > unlock.md
+          envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
 
       - name: Attach unlock to job summary
         if: always()
