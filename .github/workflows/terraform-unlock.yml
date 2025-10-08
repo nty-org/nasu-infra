@@ -84,5 +84,19 @@ jobs:
         if: env.unlock_needed == 'true'
         run: |
           echo "Force-unlocking Terraform lock $LOCK_ID"
-          terraform force-unlock -force $LOCK_ID
-    
+          
+          {
+            echo "# 🔓 Terraform Unlock Result"
+            echo ""
+            echo "Lock ID: \`$LOCK_ID\`"
+            echo ""
+            echo '```'
+            terraform force-unlock -force "$LOCK_ID"
+            echo '```'
+          } > unlock.md
+
+      - name: Attach unlock to job summary
+        if: always()
+        run: |
+          echo '# Terraform Unlock (${{ github.event.inputs.environment }})' >> "$GITHUB_STEP_SUMMARY"
+          cat unlock.md >> "$GITHUB_STEP_SUMMARY"
