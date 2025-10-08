@@ -86,7 +86,7 @@ jobs:
         run: |
           STATUS_EMOJI="✅"
           STATUS_TEXT="No lock found in DynamoDB table \`${TF_LOCK_TABLE}\`"
-          UNLOCK_OUTPUT="_No action needed._"
+          UNLOCK_OUTPUT="No action needed."
 
           export STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
           envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
