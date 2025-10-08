@@ -80,6 +80,15 @@ jobs:
             echo "unlock_needed=false" >> $GITHUB_ENV
           fi
 
+      - name: Output Unlock Result (No Lock Case)
+        if: env.unlock_needed == 'false'
+        run: |
+          echo "# 🔓 Terraform Unlock Result" > unlock.md
+          echo "" >> unlock.md
+          echo "✅ No lock found in DynamoDB table \`$TF_LOCK_TABLE\`" >> unlock.md
+          echo "" >> unlock.md
+          echo "_No action needed._" >> unlock.md
+
       - name: Force Unlock if Needed
         if: env.unlock_needed == 'true'
         run: |
