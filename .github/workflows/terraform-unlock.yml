@@ -83,28 +83,41 @@ jobs:
       - name: Output Unlock Result (No Lock Case)
         if: env.unlock_needed == 'false'
         run: |
-          echo "# 🔓 Terraform Unlock Result" > unlock.md
-          echo "" >> unlock.md
-          echo "✅ No lock found in DynamoDB table \`$TF_LOCK_TABLE\`" >> unlock.md
-          echo "" >> unlock.md
-          echo "_No action needed._" >> unlock.md
+          cat << EOF > unlock.md
+# 🔓 Terraform Unlock Result
+
+✅ No lock found in DynamoDB table `${{ env.TF_LOCK_TABLE }}`
+
+_No action needed._
+EOF
 
       - name: Force Unlock if Needed
         if: env.unlock_needed == 'true'
         run: |
           echo "Force-unlocking Terraform lock $LOCK_ID"
           
-          {
-            echo "# 🔓 Terraform Unlock Result"
-            echo ""
-            echo "✅ Found lock in DynamoDB table \`$TF_LOCK_TABLE\`"
-            echo ""
-            echo "Lock ID: \`$LOCK_ID\`"
-            echo ""
-            echo '```'
-            terraform force-unlock -no-color -force "$LOCK_ID"
-            echo '```'
-          } > unlock.md
+          UNLOCK_OUTPUT=$(terraform force-unlock -no-color -force "$LOCK_ID" 2>&1 || true)
+          UNLOCK_STATUS=$?
+
+          if [ $UNLOCK_STATUS -eq 0 ]; then
+            STATUS_EMOJI="✅"
+            STATUS_TEXT="Successfully removed"
+          else
+            STATUS_EMOJI="⚠️"
+            STATUS_TEXT="Attempted removal (see details)"
+          fi
+
+          cat > unlock.md <<EOF
+# 🔓 Terraform Unlock Result
+
+${STATUS_EMOJI} ${STATUS_TEXT}
+
+Lock ID: \`${LOCK_ID}\`
+
+\`\`\`
+${UNLOCK_OUTPUT}
+\`\`\`
+EOF
 
       - name: Attach unlock to job summary
         if: always()
