@@ -61,6 +61,7 @@ jobs:
 
       - run: terraform init
 
+      # DynamoDBからロック情報をスキャン
       - name: Detect Terraform Lock
         id: detect_lock
         run: |
@@ -86,7 +87,7 @@ jobs:
           cat << EOF > unlock.md
 # 🔓 Terraform Unlock Result
 
-✅ No lock found in DynamoDB table `${{ env.TF_LOCK_TABLE }}`
+✅ No lock found in DynamoDB table ${TF_LOCK_TABLE}
 
 _No action needed._
 EOF
@@ -95,7 +96,7 @@ EOF
         if: env.unlock_needed == 'true'
         run: |
           echo "Force-unlocking Terraform lock $LOCK_ID"
-          
+
           UNLOCK_OUTPUT=$(terraform force-unlock -no-color -force "$LOCK_ID" 2>&1 || true)
           UNLOCK_STATUS=$?
 
