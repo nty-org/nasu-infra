@@ -109,16 +109,16 @@ jobs:
           fi
 
           cat > unlock.md <<EOF
-# 🔓 Terraform Unlock Result
+          # 🔓 Terraform Unlock Result
 
-${STATUS_EMOJI} ${STATUS_TEXT}
+          ${STATUS_EMOJI} ${STATUS_TEXT}
 
-Lock ID: \`${LOCK_ID}\`
+          Lock ID: \`${LOCK_ID}\`
 
-\`\`\`
-${UNLOCK_OUTPUT}
-\`\`\`
-EOF
+          \`\`\`
+          ${UNLOCK_OUTPUT}
+          \`\`\`
+          EOF
 
       - name: Attach unlock to job summary
         if: always()
