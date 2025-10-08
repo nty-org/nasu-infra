@@ -84,11 +84,12 @@ jobs:
       - name: Output Unlock Result (No Lock Case)
         if: env.unlock_needed == 'false'
         run: |
-          cat > unlock.md <<'EOF'
+          cat > unlock.md <<EOF
 # 🔓 Terraform Unlock Result
 
 ✅ No lock found in DynamoDB table ${TF_LOCK_TABLE}
 
+_No action needed._
 EOF
 
       - name: Force Unlock if Needed
@@ -107,7 +108,7 @@ EOF
             STATUS_TEXT="Attempted removal (see details)"
           fi
 
-          cat > unlock.md <<'EOF'
+          cat > unlock.md <<EOF
 # 🔓 Terraform Unlock Result
 
 ${STATUS_EMOJI} ${STATUS_TEXT}
