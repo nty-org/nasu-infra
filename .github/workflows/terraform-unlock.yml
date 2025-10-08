@@ -61,10 +61,10 @@ jobs:
 
       - run: terraform init
 
-      # DynamoDBからロック情報をスキャン
-      - name: Detect Terraform Lock
-        id: detect_lock
+      # Unlockが必要かどうか確認し、必要な場合は実行 
+      - name: Terraform Unlock
         run: |
+          # Lock情報の有無を確認
           echo "Scanning DynamoDB for Terraform locks..."
           LOCK_ID=$(aws dynamodb scan \
             --table-name $TF_LOCK_TABLE \
@@ -72,41 +72,29 @@ jobs:
             --query 'Items[?Info.S!=`null`].Info.S' \
             --output text | jq -r '.ID')
 
+          # Lock情報が存在するかどうかで処理を分岐
           if [ -n "$LOCK_ID" ]; then
             echo "Found lock: $LOCK_ID"
-            echo "unlock_needed=true" >> $GITHUB_ENV
-            echo "LOCK_ID=$LOCK_ID" >> $GITHUB_ENV
+            UNLOCK_OUTPUT=$(terraform force-unlock -no-color -force "$LOCK_ID" 2>&1 || true)
+            UNLOCK_STATUS=$?
+            # アンロックの結果に応じてステータスを設定
+            if [ $UNLOCK_STATUS -eq 0 ]; then
+              STATUS_EMOJI="✅"
+              STATUS_TEXT="Successfully removed"
+            else
+              STATUS_EMOJI="⚠️"
+              STATUS_TEXT="Attempted removal (see details)"
+            fi
+          # Lock情報が存在しない場合
           else
             echo "No lock found."
-            echo "unlock_needed=false" >> $GITHUB_ENV
-          fi
-
-      - name: Output Unlock Result (No Lock Case)
-        if: env.unlock_needed == 'false'
-        run: |
-          STATUS_EMOJI="✅"
-          STATUS_TEXT="No lock found in DynamoDB table \`${TF_LOCK_TABLE}\`"
-          UNLOCK_OUTPUT="No action needed."
-
-          export STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
-          envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
-
-      - name: Force Unlock if Needed
-        if: env.unlock_needed == 'true'
-        run: |
-          echo "Force-unlocking Terraform lock $LOCK_ID"
-
-          UNLOCK_OUTPUT=$(terraform force-unlock -no-color -force "$LOCK_ID" 2>&1 || true)
-          UNLOCK_STATUS=$?
-
-          if [ $UNLOCK_STATUS -eq 0 ]; then
+            LOCK_ID=""
+            UNLOCK_OUTPUT="No action needed."
             STATUS_EMOJI="✅"
-            STATUS_TEXT="Successfully removed"
-          else
-            STATUS_EMOJI="⚠️"
-            STATUS_TEXT="Attempted removal (see details)"
+            STATUS_TEXT="No lock found in DynamoDB table \`${TF_LOCK_TABLE}\`"
           fi
 
+          # 結果を環境変数にエクスポートし、unlock.mdを生成
           export LOCK_ID STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
           envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
 
