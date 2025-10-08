@@ -97,6 +97,8 @@ jobs:
           {
             echo "# 🔓 Terraform Unlock Result"
             echo ""
+            echo "✅ Found lock in DynamoDB table \`$TF_LOCK_TABLE\`"
+            echo ""
             echo "Lock ID: \`$LOCK_ID\`"
             echo ""
             echo '```'
