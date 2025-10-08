@@ -1,0 +1,88 @@
+name: terraform unlock
+on:
+    workflow_dispatch:
+      inputs:
+        environment:
+          type: choice
+          description: Unlockする環境
+          required: true
+          options:
+            - nasu-prod
+  
+env:
+    TERRAFORM_ENV: |-
+        ${{ fromJSON('{
+            "nasu-prod": "monolith/terraform"
+        }')[github.event.inputs.environment] }}
+    TF_LOCK_TABLE: |-
+        ${{ fromJSON('{
+            "nasu-prod": "nasu-prod-tfstatelock"
+        }')[github.event.inputs.environment] }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  # ===========================
+  #  terraform unlock
+  # ===========================
+  terraform_unlock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.TERRAFORM_ENV }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Determine Role from envs-iam-role.json
+        id: get_role
+        run: |
+          ROLE_ARN=$(jq -r '.["${{ env.TERRAFORM_ENV }}"].plan' ${{ github.workspace }}/.github/envs-iam-role.json)
+          if [ "$ROLE_ARN" = "null" ]; then
+            echo "Error: No role found for directory ${{ env.TERRAFORM_ENV }}"
+            exit 1
+          fi
+          echo "ROLE_ARN=${ROLE_ARN}" >> $GITHUB_ENV
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: 'us-east-1'
+          role-to-assume: ${{ env.ROLE_ARN }}
+          
+      - uses: aquaproj/aqua-installer@v3.1.0
+        with:
+          aqua_version: v2.38.4
+          aqua_opts: ""
+
+      - run: terraform init
+
+      - name: Detect Terraform Lock
+        id: detect_lock
+        run: |
+          echo "Scanning DynamoDB for Terraform locks..."
+          LOCK_ID=$(aws dynamodb scan \
+            --table-name $TF_LOCK_TABLE \
+            --region ap-northeast-1 \
+            --query 'Items[?Info.S!=`null`].Info.S' \
+            --output text --profile nasu-infra | jq -r '.ID')
+
+          if [ -n "$LOCK_ID" ]; then
+            echo "Found lock: $LOCK_ID"
+            echo "unlock_needed=true" >> $GITHUB_ENV
+            echo "LOCK_ID=$LOCK_ID" >> $GITHUB_ENV
+          else
+            echo "No lock found."
+            echo "unlock_needed=false" >> $GITHUB_ENV
+          fi
+
+      - name: Force Unlock if Needed
+        if: env.unlock_needed == 'true'
+        run: |
+          echo "Force-unlocking Terraform lock $LOCK_ID"
+          terraform force-unlock -force $LOCK_ID
+    
