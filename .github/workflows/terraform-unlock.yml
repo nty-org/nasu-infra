@@ -100,7 +100,7 @@ jobs:
             echo "Lock ID: \`$LOCK_ID\`"
             echo ""
             echo '```'
-            terraform force-unlock -force "$LOCK_ID"
+            terraform force-unlock -no-color -force "$LOCK_ID"
             echo '```'
           } > unlock.md
 
