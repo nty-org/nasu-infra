@@ -3,6 +3,7 @@ data "aws_caller_identity" "current" {}
 # -------------------------------------------------------------#
 #  network
 # -------------------------------------------------------------#
+
 module "network" {
   source      = "../../modules/network"
   pj_prefix  = local.pj_prefix
@@ -20,39 +21,39 @@ module "network" {
 # -------------------------------------------------------------#
 #  acm
 # -------------------------------------------------------------#
-
+/*
 module "api_acm" {
   source = "../../modules/acm"
   zone_name   = local.zone_name
   app_name    = "api"
   route53_ttl = 300
 }
-
+*/
 # -------------------------------------------------------------#
 #  ecs role
 # -------------------------------------------------------------#
-
+/*
 module "ecs_role" {
   source = "../../modules/ecs-role"
   pj_prefix  = local.pj_prefix
   env_prefix = local.env_prefix
   account_id = data.aws_caller_identity.current.account_id
 }
-
+*/
 # -------------------------------------------------------------#
 #  ecs cluster
 # -------------------------------------------------------------#
-
+/*
 module "ecs_cluster" {
   source = "../../modules/ecs-cluster"
   pj_prefix  = local.pj_prefix
   env_prefix = local.env_prefix
 }
-
+*/
 # -------------------------------------------------------------#
 #  ecs app
 # -------------------------------------------------------------#
-
+/*
 module "api_ecs_app" {
   source = "../../modules/ecs-app"
   # common
@@ -84,11 +85,11 @@ module "api_ecs_app" {
   # ssm
   server_env = "develop"
 }
-
+*/
 # -------------------------------------------------------------#
 #  route53
 # -------------------------------------------------------------#
-
+/*
 module "api_route53" {
   source = "../../modules/route53"
   # common
@@ -100,6 +101,24 @@ module "api_route53" {
   zone_name = local.zone_name
   dns_name  = module.api_ecs_app.dns_name
   zone_id   = module.api_ecs_app.zone_id
+}
+*/
+# -------------------------------------------------------------#
+# bastion
+# -------------------------------------------------------------#
+
+module "bastion" {
+  source = "../../modules/bastion"
+  
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+
+  # EC2設定
+  subnet_id                 = module.network.private_subnet_ids[0] # 必要に応じてインデックスを指定
+  private_security_group_id = module.network.private_security_group_id
+  volume_size               = 20
+  volume_type               = "gp3"
 }
 
 # -------------------------------------------------------------#
