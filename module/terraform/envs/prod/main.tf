@@ -194,23 +194,23 @@ module "ecs_abnormal_stop" {
 ## -------------------------------------------------------------#
 ## ecs exec
 ## -------------------------------------------------------------#
-/*
+
 module "ecs_exec" {
-  source = "../../modules/monitoring/ecs-abnormal-stop"
+  source = "../../modules/security/ecs-exec"
   
   # 共通設定
   pj_prefix  = local.pj_prefix
   env_prefix = local.env_prefix
-  account_id = local.account_id
+
+  # cloudwatch設定
+  log_retention_in_days = 30
 
   # eventbridge設定
-  cluster_arn         = module.ecs_cluster.cluster_arn
   sns_topic_slack_arn = module.slack.sns_topic_slack_arn
   eventbridge_rule_sns_target_role_arn = module.slack.eventbridge_rule_sns_target_role_arn
-  ecs_services        = ["app"]
 
 }
-*/
+
 # -------------------------------------------------------------#
 #  sre
 # -------------------------------------------------------------#
