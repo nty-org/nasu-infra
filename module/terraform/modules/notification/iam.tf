@@ -60,3 +60,50 @@ resource "aws_iam_role_policy_attachment" "q_developer_slack_AWSResourceExplorer
   role       = aws_iam_role.q_developer_slack.name
   policy_arn = "arn:aws:iam::aws:policy/AWSResourceExplorerReadOnlyAccess"
 }
+
+## ------------------------------------------------------------#
+##  eventbridge rule sns target
+## ------------------------------------------------------------#
+
+resource "aws_iam_role" "eventbridge_rule_sns_target" {
+  name                 = "${var.pj_prefix}-${var.env_prefix}-eventbridge-rule-sns-target-role"
+  path                 = "/service-role/"
+  max_session_duration = 3600
+  assume_role_policy   = data.aws_iam_policy_document.eventbridge_rule_sns_target_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "eventbridge_rule_sns_target_assume_role_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRole"
+    ]
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "eventbridge_rule_sns_target" {
+  name   = "${var.pj_prefix}-${var.env_prefix}-eventbridge-rule-sns-target-policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.eventbridge_rule_sns_target.json
+}
+
+data "aws_iam_policy_document" "eventbridge_rule_sns_target" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:Publish"
+    ]
+    resources = [
+      aws_sns_topic.slack.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "eventbridge_rule_sns_target" {
+  role       = aws_iam_role.eventbridge_rule_sns_target.name
+  policy_arn = aws_iam_policy.eventbridge_rule_sns_target.arn
+}

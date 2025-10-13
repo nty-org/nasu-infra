@@ -43,13 +43,13 @@ module "ecs_role" {
 # -------------------------------------------------------------#
 #  ecs cluster
 # -------------------------------------------------------------#
-/*
+
 module "ecs_cluster" {
   source = "../../modules/ecs-cluster"
   pj_prefix  = local.pj_prefix
   env_prefix = local.env_prefix
 }
-*/
+
 # -------------------------------------------------------------#
 #  ecs app
 # -------------------------------------------------------------#
@@ -137,6 +137,30 @@ module "slack" {
   slack_channel_name = "times_nasu"
   slack_team_id = "T02KGURL8BG"
   slack_channel_id = "C05H3HTMLSY"
+
+}
+
+# -------------------------------------------------------------#
+# monitoring
+# -------------------------------------------------------------#
+
+## -------------------------------------------------------------#
+## ecs abnormal stop
+## -------------------------------------------------------------#
+
+module "ecs_abnormal_stop" {
+  source = "../../modules/monitoring/ecs-abnormal-stop"
+  
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  account_id = local.account_id
+
+  # eventbridge設定
+  cluster_arn         = module.ecs_cluster.cluster_arn
+  sns_topic_slack_arn = module.slack.sns_topic_slack_arn
+  eventbridge_rule_sns_target_role_arn = module.slack.eventbridge_rule_sns_target_role_arn
+  ecs_services        = ["app"]
 
 }
 
