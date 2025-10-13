@@ -3,7 +3,7 @@ data "aws_caller_identity" "current" {}
 # -------------------------------------------------------------#
 #  network
 # -------------------------------------------------------------#
-
+/*
 module "network" {
   source      = "../../modules/network"
   pj_prefix  = local.pj_prefix
@@ -17,7 +17,7 @@ module "network" {
     private = ["10.2.48.0/20", "10.2.64.0/20", "10.2.80.0/20"]
   }
 }
-
+*/
 # -------------------------------------------------------------#
 #  acm
 # -------------------------------------------------------------#
@@ -106,7 +106,7 @@ module "api_route53" {
 # -------------------------------------------------------------#
 # bastion
 # -------------------------------------------------------------#
-
+/*
 module "bastion" {
   source = "../../modules/bastion"
   
@@ -119,6 +119,25 @@ module "bastion" {
   private_security_group_id = module.network.private_security_group_id
   volume_size               = 20
   volume_type               = "gp3"
+}
+*/
+# -------------------------------------------------------------#
+# notification
+# -------------------------------------------------------------#
+
+module "slack" {
+  source = "../../modules/notification"
+  
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  account_id = local.account_id
+
+  # q developer設定
+  slack_channel_name = "times_nasu"
+  slack_team_id = "T02KGURL8BG"
+  slack_channel_id = "C05H3HTMLSY"
+
 }
 
 # -------------------------------------------------------------#
