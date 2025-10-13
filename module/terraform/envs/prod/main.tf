@@ -141,13 +141,36 @@ module "slack" {
 }
 
 # -------------------------------------------------------------#
+# logging
+# -------------------------------------------------------------#
+
+## -------------------------------------------------------------#
+## cloudtrail
+## -------------------------------------------------------------#
+
+module "cloudtrail" {
+  source = "../../modules/logging/cloudtrail"
+  
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  account_id = local.account_id
+
+  # cloudtrail設定
+  s3_bucket_arns = [] # S3のARNリストを指定、例: ["arn:aws:s3:::example-bucket"]
+  cloudwatch_log_retention_in_days = 30
+  cloudtrail_bucket_log_retention_in_days = 30
+
+}
+
+# -------------------------------------------------------------#
 # monitoring
 # -------------------------------------------------------------#
 
 ## -------------------------------------------------------------#
 ## ecs abnormal stop
 ## -------------------------------------------------------------#
-
+/*
 module "ecs_abnormal_stop" {
   source = "../../modules/monitoring/ecs-abnormal-stop"
   
@@ -163,7 +186,31 @@ module "ecs_abnormal_stop" {
   ecs_services        = ["app"]
 
 }
+*/
+# -------------------------------------------------------------#
+# security
+# -------------------------------------------------------------#
 
+## -------------------------------------------------------------#
+## ecs exec
+## -------------------------------------------------------------#
+/*
+module "ecs_exec" {
+  source = "../../modules/monitoring/ecs-abnormal-stop"
+  
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  account_id = local.account_id
+
+  # eventbridge設定
+  cluster_arn         = module.ecs_cluster.cluster_arn
+  sns_topic_slack_arn = module.slack.sns_topic_slack_arn
+  eventbridge_rule_sns_target_role_arn = module.slack.eventbridge_rule_sns_target_role_arn
+  ecs_services        = ["app"]
+
+}
+*/
 # -------------------------------------------------------------#
 #  sre
 # -------------------------------------------------------------#
