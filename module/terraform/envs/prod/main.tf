@@ -43,13 +43,13 @@ module "ecs_role" {
 # -------------------------------------------------------------#
 #  ecs cluster
 # -------------------------------------------------------------#
-
+/*
 module "ecs_cluster" {
   source = "../../modules/ecs-cluster"
   pj_prefix  = local.pj_prefix
   env_prefix = local.env_prefix
 }
-
+*/
 # -------------------------------------------------------------#
 #  ecs app
 # -------------------------------------------------------------#
@@ -124,7 +124,7 @@ module "bastion" {
 # -------------------------------------------------------------#
 # notification
 # -------------------------------------------------------------#
-
+/*
 module "slack" {
   source = "../../modules/notification"
   
@@ -139,7 +139,7 @@ module "slack" {
   slack_channel_id = "C05H3HTMLSY"
 
 }
-
+*/
 # -------------------------------------------------------------#
 # logging
 # -------------------------------------------------------------#
@@ -147,7 +147,7 @@ module "slack" {
 ## -------------------------------------------------------------#
 ## cloudtrail
 ## -------------------------------------------------------------#
-
+/*
 module "cloudtrail" {
   source = "../../modules/logging/cloudtrail"
   
@@ -162,7 +162,7 @@ module "cloudtrail" {
   cloudtrail_bucket_log_retention_in_days = 30
 
 }
-
+*/
 # -------------------------------------------------------------#
 # monitoring
 # -------------------------------------------------------------#
@@ -194,7 +194,7 @@ module "ecs_abnormal_stop" {
 ## -------------------------------------------------------------#
 ## ecs exec
 ## -------------------------------------------------------------#
-
+/*
 module "ecs_exec" {
   source = "../../modules/security/ecs-exec"
   
@@ -210,39 +210,51 @@ module "ecs_exec" {
   eventbridge_rule_sns_target_role_arn = module.slack.eventbridge_rule_sns_target_role_arn
 
 }
-
-# -------------------------------------------------------------#
-#  sre
-# -------------------------------------------------------------#
-/*
-module "sre_nightstop" {
-  source = "../../modules/sre/night-stop"
-
-  PJPrefix = local.PJPrefix
-  
-  EnvPrefix = local.EnvPrefix
-
-  # 夜間停止対象EC2
-  # 0:00~6:00
-  ec2_night_stop_instance_0000-0600 = {
-    "nat" = data.aws_instance.nat.id
-  }
-  
-  # 夜間停止対象RDS
-  # 0:00~6:00
-  rds_cluster  = "${local.PJPrefix}-${local.EnvPrefix}-cluster"
-  
-
-  # 夜間停止対象ECS
-  ecs_night_stop_cluster  = ""
-  # 0:00~6:00
-  ecs_night_stop_services_0000-0600 = [
-    ""
-  ]
-  # 0:00~5:30
-  ecs_night_stop_services_0000-0530 = [
-    ""
-  ]
-
-}
 */
+# -------------------------------------------------------------#
+#  cost
+# -------------------------------------------------------------#
+
+## -------------------------------------------------------------#
+##  night stop
+## -------------------------------------------------------------#
+module "nightstop" {
+  source = "../../modules/cost/night-stop"
+
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+
+  # eventbridge scheduler設定
+  # 夜間停止対象EC2
+  ec2_night_stop_instances = {
+    "nat" = {
+      instance_name = "${local.pj_prefix}-prod-nat"
+      start_time  = "00 08" # 分と時をスペースで区切る
+      stop_time   = "00 20"
+    }
+    "code-server" = {
+      instance_name = "${local.pj_prefix}-prod-code-server"
+      start_time  = "00 08" # 分と時をスペースで区切る
+      stop_time   = "00 20"
+    }
+  }
+/*
+  # 夜間停止対象ECS
+  ecs_night_stop_cluster  = "${local.pj_prefix}-${local.env_prefix}-cluster"
+  ecs_night_stop_services = {
+    "app" = {
+      service_name       = "${local.pj_prefix}-${local.env_prefix}-app-service"
+      start_time         = "00 08" # 分と時をスペースで区切る
+      stop_time          = "00 20"
+      start_desire_count = 1
+      stop_desire_count  = 0
+    }
+  }
+*/
+/*
+  # 夜間停止対象RDS
+  rds_night_stop_cluster = "${local.pj_prefix}-${local.env_prefix}-cluster"
+
+*/
+}
