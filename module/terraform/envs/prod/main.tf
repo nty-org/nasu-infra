@@ -27,6 +27,21 @@ module "api_acm" {
   zone_name   = local.zone_name
   app_name    = "api"
   route53_ttl = 300
+  providers = {
+    aws         = aws
+    aws.us_east_1 = aws.us_east_1
+  }
+}
+
+module "web_acm" {
+  source = "../../modules/acm"
+  zone_name   = local.zone_name
+  app_name    = "web"
+  route53_ttl = 300
+  providers = {
+    aws         = aws
+    aws.us_east_1 = aws.us_east_1
+  }
 }
 */
 # -------------------------------------------------------------#
@@ -119,6 +134,53 @@ module "bastion" {
   private_security_group_id = module.network.private_security_group_id
   volume_size               = 20
   volume_type               = "gp3"
+}
+*/
+# -------------------------------------------------------------#
+#  s3 front
+# -------------------------------------------------------------#
+/*
+module "web_s3_front" {
+  source = "../../modules/s3-front"
+  # common
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  app_name   = "web"
+  account_id = data.aws_caller_identity.current.account_id
+  zone_name  = local.zone_name
+
+  # s3
+  s3_buckets = {
+    "web" = {
+      bucket_name          = "${local.pj_prefix}-${local.env_prefix}-web"
+      versioning_status    = "Enabled"
+      cors_allowed_origins = "*" # 必要に応じて変更
+    }
+  }
+
+  # cloudfront
+  origins = {
+    web = {
+      domain_name = "${local.pj_prefix}-${local.env_prefix}-web.my-bucket.s3.ap-northeast-1.amazonaws.com"
+      origin_id   = "${local.pj_prefix}-${local.env_prefix}-web"
+      origin_path = ""
+    }
+  }
+
+  ordered_cache_behaviors = {
+    behavior1 = {
+      path_pattern           = "/test/*"
+      allowed_methods        = ["GET", "HEAD"]
+      cached_methods         = ["GET", "HEAD"]
+      target_origin_id       = "{local.pj_prefix}-${local.env_prefix}-web"
+      compress               = true
+      viewer_protocol_policy = "https-only"
+    }
+  }
+
+  default_origin_id   = "${local.pj_prefix}-${local.env_prefix}-web"
+  acm_certificate_arn = module.web_acm.certificate_arn
+  response_page_path  = "/index.html"
 }
 */
 # -------------------------------------------------------------#
