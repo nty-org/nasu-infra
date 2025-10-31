@@ -1,0 +1,91 @@
+name: terraform unlock ID
+on:
+    workflow_dispatch:
+      inputs:
+        environment:
+          type: choice
+          description: Unlockする環境
+          required: true
+          options:
+            - nasu-prod
+        unlock_id:
+          type: string
+          description: Lock ID
+          required: true
+  
+env:
+    TERRAFORM_ENV: |-
+        ${{ fromJSON('{
+            "nasu-prod": "monolith/terraform"
+        }')[github.event.inputs.environment] }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  # ===========================
+  #  terraform unlock
+  # ===========================
+  terraform_unlock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.TERRAFORM_ENV }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Determine Role from envs-iam-role.json
+        id: get_role
+        run: |
+          ROLE_ARN=$(jq -r '.["${{ env.TERRAFORM_ENV }}"].plan' ${{ github.workspace }}/.github/envs-iam-role.json)
+          if [ "$ROLE_ARN" = "null" ]; then
+            echo "Error: No role found for directory ${{ env.TERRAFORM_ENV }}"
+            exit 1
+          fi
+          echo "ROLE_ARN=${ROLE_ARN}" >> $GITHUB_ENV
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: 'us-east-1'
+          role-to-assume: ${{ env.ROLE_ARN }}
+          
+      - uses: aquaproj/aqua-installer@v3.1.0
+        with:
+          aqua_version: v2.38.4
+          aqua_opts: ""
+
+      - run: terraform init
+
+      - name: Terraform Unlock
+        env:
+          LOCK_ID: ${{ github.event.inputs.unlock_id }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+        run: |
+          set +e
+          UNLOCK_OUTPUT=$(terraform force-unlock -no-color -force "$LOCK_ID" 2>&1)
+          UNLOCK_STATUS=$?
+          set -e
+
+          # アンロックの結果に応じてステータスを設定
+          if [ $UNLOCK_STATUS -eq 0 ]; then
+            STATUS_EMOJI="✅"
+            STATUS_TEXT="Successfully removed"
+          else
+            STATUS_EMOJI="⚠️"
+            STATUS_TEXT="Attempted removal (see details)"
+          fi
+
+          # 結果を環境変数にエクスポートし、unlock.mdを生成
+          export LOCK_ID ENVIRONMENT STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
+          envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
+
+      - name: Attach unlock to job summary
+        if: always()
+        run: |
+          echo '# Terraform Unlock (${{ github.event.inputs.environment }})' >> "$GITHUB_STEP_SUMMARY"
+          cat unlock.md >> "$GITHUB_STEP_SUMMARY"
