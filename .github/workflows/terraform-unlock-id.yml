@@ -84,6 +84,12 @@ jobs:
           export LOCK_ID ENVIRONMENT STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
           envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
 
+          # エラー終了は最後に実行
+          if [ $UNLOCK_STATUS -ne 0 ]; then
+            echo "$UNLOCK_OUTPUT"
+            exit 1
+          fi
+
       - name: Attach unlock to job summary
         if: always()
         run: |
