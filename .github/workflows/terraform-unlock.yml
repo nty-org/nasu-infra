@@ -63,6 +63,8 @@ jobs:
 
       # Unlockが必要かどうか確認し、必要な場合は実行 
       - name: Terraform Unlock
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
         run: |
           # Lock情報の有無を確認
           echo "Scanning DynamoDB for Terraform locks..."
@@ -95,7 +97,7 @@ jobs:
           fi
 
           # 結果を環境変数にエクスポートし、unlock.mdを生成
-          export LOCK_ID STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
+          export LOCK_ID ENVIRONMENT STATUS_EMOJI STATUS_TEXT UNLOCK_OUTPUT
           envsubst < ${{ github.workspace }}/.github/templates/unlock.md > unlock.md
 
       - name: Attach unlock to job summary
