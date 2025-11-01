@@ -262,6 +262,35 @@ module "ecs_abnormal_stop" {
 
 }
 */
+## -------------------------------------------------------------#
+## synthetics
+## -------------------------------------------------------------#
+/*
+module "synthetics" {
+  source = "../../modules/monitoring/synthetics"
+
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  account_id = local.account_id
+
+  # synthetics設定
+  synthetics_canaries = {
+    "app" = {
+      hostname = "app.${local.zone_name}"
+      path     = "/health_check/"
+      success_retention_period = 30
+      failure_retention_period = 30
+      timeout_in_seconds = 10
+      schedule_expression = "rate(5 minutes)"
+    }
+  }
+
+  # cloudwatch設定
+  sns_topic_slack_arn = module.slack.sns_topic_slack_arn
+
+}
+*/
 # -------------------------------------------------------------#
 # security
 # -------------------------------------------------------------#
