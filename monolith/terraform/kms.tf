@@ -5,7 +5,7 @@
 ## ------------------------------------------------------------#
 ##  cloudtrail
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_kms_key" "cloudtrail" {
   key_usage                = "ENCRYPT_DECRYPT"
   customer_master_key_spec = "SYMMETRIC_DEFAULT"
@@ -48,18 +48,12 @@ data "aws_iam_policy_document" "kms_cloudtrail" {
       identifiers = ["cloudtrail.amazonaws.com"]
     }
 
+    #${local.PJPrefix}-${local.EnvPrefix}-management-event と
     #${local.PJPrefix}-${local.EnvPrefix}-s3 証跡へ権限を許可
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
-      values   = ["arn:aws:cloudtrail:ap-northeast-1:${local.account_id}:trail/${local.PJPrefix}-${local.EnvPrefix}-s3"]
-    }
-
-    #${local.PJPrefix}-${local.EnvPrefix}-management-event 証跡へ権限を許可
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceArn"
-      values   = ["arn:aws:cloudtrail:ap-northeast-1:${local.account_id}:trail/${local.PJPrefix}-${local.EnvPrefix}-management-event"]
+      values   = ["arn:aws:cloudtrail:ap-northeast-1:${local.account_id}:trail/${local.PJPrefix}-${local.EnvPrefix}-management-event", "arn:aws:cloudtrail:ap-northeast-1:${local.account_id}:trail/${local.PJPrefix}-${local.EnvPrefix}-s3"]
     }
 
     condition {
@@ -163,3 +157,4 @@ data "aws_iam_policy_document" "kms_cloudtrail" {
   }
 
 }
+*/

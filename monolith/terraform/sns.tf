@@ -5,7 +5,7 @@
 ## ------------------------------------------------------------#
 ##  slack
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_sns_topic" "slack" {
   name = "${local.PJPrefix}-${local.EnvPrefix}-slack"
 }
@@ -57,3 +57,4 @@ resource "aws_sns_topic_subscription" "slack" {
   protocol  = "https"
   endpoint  = "https://global.sns-api.chatbot.amazonaws.com"
 }
+*/

@@ -68,7 +68,7 @@ resource "aws_iam_role_policy_attachment" "chatbot_slack_AWSResourceExplorerRead
 ## ------------------------------------------------------------#
 ##  slack
 ## ------------------------------------------------------------#
-
+/*
 resource "awscc_chatbot_slack_channel_configuration" "slack" {
 
   configuration_name = local.slack_channel_name
@@ -82,3 +82,4 @@ resource "awscc_chatbot_slack_channel_configuration" "slack" {
 
   guardrail_policies = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }
+*/

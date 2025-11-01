@@ -273,7 +273,7 @@ resource "aws_wafv2_web_acl" "api" {
 ## ------------------------------------------------------------#
 ##  codeserver
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_wafv2_web_acl" "code_server" {
   name  = "${local.PJPrefix}-${local.EnvPrefix}-code-server-waf"
   scope = "REGIONAL"
@@ -329,7 +329,7 @@ resource "aws_wafv2_web_acl_association" "code_server" {
   resource_arn = aws_lb.code_server.arn
   web_acl_arn  = aws_wafv2_web_acl.code_server.arn
 }
-
+*/
 ## ------------------------------------------------------------#
 ##  ddos detection
 ## ------------------------------------------------------------#

@@ -395,7 +395,7 @@ data "aws_iam_policy_document" "github_actions_terraform_plan_assume_role_policy
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:usan73/nasu-infra:*"]
+      values   = local.github_actions_terraform_plan_allowed_subs
     }
   }
 }
@@ -456,7 +456,7 @@ data "aws_iam_policy_document" "github_actions_terraform_apply_assume_role_polic
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:usan73/nasu-infra:environment:*"]
+      values   = local.github_actions_terraform_apply_allowed_subs
     }
   }
 }

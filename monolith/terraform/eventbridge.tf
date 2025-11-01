@@ -78,7 +78,7 @@ resource "aws_iam_role_policy_attachment" "eventbridge_scheduler" {
 ## ------------------------------------------------------------#
 ##  eventbridge rule sns target
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_iam_role" "eventbridge_rule_sns_target" {
   assume_role_policy   = data.aws_iam_policy_document.eventbridge_rule_sns_target_assume_role_policy.json
   max_session_duration = "3600"
@@ -122,7 +122,7 @@ resource "aws_iam_role_policy_attachment" "eventbridge_rule_sns_target" {
   role       = aws_iam_role.eventbridge_rule_sns_target.name
   policy_arn = aws_iam_policy.eventbridge_rule_sns_target.arn
 }
-
+*/
 ## ------------------------------------------------------------#
 ##  ecs scheduled task role
 ## ------------------------------------------------------------#
@@ -335,7 +335,7 @@ resource "aws_scheduler_schedule" "ecs_stop" {
 ## ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_log_group" "ecs_abnormal_stop" {
-  for_each = toset(["api", "worker"])
+  for_each = toset(["app"])
   
   name              = "/aws/events/${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop"
   retention_in_days = 30
@@ -346,7 +346,7 @@ resource "aws_cloudwatch_log_group" "ecs_abnormal_stop" {
 }
 
 resource "aws_cloudwatch_event_rule" "ecs_abnormal_stop" {
-  for_each = toset(["api", "worker"])
+  for_each = toset(["app"])
   
   name                = "${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop"
   event_pattern = <<-EOT
@@ -361,14 +361,14 @@ resource "aws_cloudwatch_event_rule" "ecs_abnormal_stop" {
       "clusterArn": ["${aws_ecs_cluster.this.arn}"],
       "$or": [{
         "containers": {
-          "exitCode": [{ "anything-but": 0 }]
+          "exitCode": [{ "anything-but": [ 0, 137, 143 ] }]
         }
       },
       {
         "stoppedReason": [{ "anything-but": { "prefix": "Scaling activity initiated by (deployment ecs-svc" } }]
       }],
       "lastStatus": ["STOPPED"], 
-      "taskDefinitionArn" : [{ "prefix": "arn:aws:ecs:ap-northeast-1:${local.account_id}:task-definition/${local.PJPrefix}-${local.EnvPrefix}-${each.key}-fargate-task:2"}]
+      "taskDefinitionArn" : [{ "prefix": "arn:aws:ecs:ap-northeast-1:${local.account_id}:task-definition/${local.PJPrefix}-${local.EnvPrefix}-${each.key}-fargate-task"}]
     }
   }
   EOT
@@ -376,7 +376,7 @@ resource "aws_cloudwatch_event_rule" "ecs_abnormal_stop" {
 }
 
 resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_log" {
-  for_each = toset(["api", "worker"])
+  for_each = toset(["app"])
   
   target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop-log"
   rule      = aws_cloudwatch_event_rule.ecs_abnormal_stop[each.key].name
@@ -385,7 +385,7 @@ resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_log" {
 }
 
 resource "aws_cloudwatch_event_target" "ecs_abnormal_stop_notification" {
-  for_each = toset(["api", "worker"])
+  for_each = toset(["app"])
   
   target_id = "${local.PJPrefix}-${local.EnvPrefix}-ecs-${each.key}-abnormal-stop-notification"
   rule      = aws_cloudwatch_event_rule.ecs_abnormal_stop[each.key].name

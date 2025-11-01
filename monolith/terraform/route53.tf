@@ -23,7 +23,7 @@ data "aws_route53_zone" "this" {
 ## ------------------------------------------------------------#
 ##  sunasuna.net
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_route53_record" "code_server_alias" {
   zone_id = data.aws_route53_zone.this.zone_id
   name    = "code-server.${local.zone_name}"
@@ -35,7 +35,7 @@ resource "aws_route53_record" "code_server_alias" {
     evaluate_target_health = true
   }
 }
-
+*/
 resource "aws_route53_record" "acm_validation_code_server" {
   for_each = {
     for dvo in aws_acm_certificate.code_server.domain_validation_options : dvo.domain_name => {

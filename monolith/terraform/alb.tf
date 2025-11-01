@@ -281,7 +281,7 @@ resource "aws_lb_target_group" "web" {
 # ------------------------------------------------------------#
 #  code server
 # ------------------------------------------------------------#
-
+/*
 resource "aws_lb" "code_server" {
   internal           = "false"
   ip_address_type    = "ipv4"
@@ -311,7 +311,7 @@ resource "aws_lb_target_group" "code_server" {
     healthy_threshold   = "2"
     interval            = "30"
     matcher             = "200"
-    path                = "/healthz"
+    path                = "/"
     port                = "traffic-port"
     protocol            = "HTTP"
     timeout             = "20"
@@ -320,7 +320,7 @@ resource "aws_lb_target_group" "code_server" {
   target_type                   = "instance"
   load_balancing_algorithm_type = "round_robin"
   name                          = "${local.PJPrefix}-${local.EnvPrefix}-code-server-tg"
-  port                          = "8080"
+  port                          = "80"
   protocol                      = "HTTP"
   protocol_version              = "HTTP1"
   vpc_id                        = aws_vpc.this.id
@@ -335,5 +335,6 @@ resource "aws_lb_target_group" "code_server" {
 resource "aws_lb_target_group_attachment" "code_server" {
   target_group_arn = aws_lb_target_group.code_server.arn
   target_id        = data.aws_instance.code_server.id
-  port             = 8080
+  port             = 80
 }
+*/

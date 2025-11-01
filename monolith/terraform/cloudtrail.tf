@@ -116,7 +116,7 @@ resource "aws_cloudwatch_log_group" "cloudtrail_s3" {
 ## ------------------------------------------------------------#
 ##  management event
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_cloudtrail" "management_event" {
   depends_on = [
     aws_s3_bucket.cloudtrail_log,
@@ -166,6 +166,10 @@ resource "aws_cloudwatch_log_group" "cloudtrail_management_event" {
   name = "/cloudtrail/${local.PJPrefix}-${local.EnvPrefix}-management-event"
 
 }
+*/
+## ------------------------------------------------------------#
+##  ecs exec monitoring
+## ------------------------------------------------------------#
 /*
 resource "aws_cloudwatch_log_metric_filter" "ecs_exec" {
 

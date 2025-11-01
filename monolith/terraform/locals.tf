@@ -35,4 +35,13 @@ locals {
 
   vercel_team_slug = "times_nasu"
 
+  github_actions_terraform_plan_allowed_subs = [
+    "repo:nty-org/nasu-infra:*"
+  ]
+
+
+  github_actions_terraform_apply_allowed_subs = [
+    "repo:nty-org/nasu-infra:environment:*"
+  ]
+
 }

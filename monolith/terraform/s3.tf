@@ -129,9 +129,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "synthetics" {
 ## ------------------------------------------------------------#
 ##  cloudtrail log
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_s3_bucket" "cloudtrail_log" {
   bucket = "${local.PJPrefix}-${local.EnvPrefix}-cloudtrail-log"
+
+  # バケット内のオブジェクトを強制的に削除
+  force_destroy = true  
 }
 
 resource "aws_s3_bucket_public_access_block" "cloudtrail_log" {
@@ -169,7 +172,7 @@ data "aws_iam_policy_document" "cloudtrail_log" {
     sid     = "${local.PJPrefix}-${local.EnvPrefix}-s3-cloudtrail-write"
     actions = ["s3:PutObject"]
     resources = [
-      "${aws_s3_bucket.cloudtrail_log.arn}/*/AWSLogs/${local.account_id}/*"
+      "${aws_s3_bucket.cloudtrail_log.arn}//AWSLogs/${local.account_id}/"
     ]
 
     principals {
@@ -215,7 +218,7 @@ data "aws_iam_policy_document" "cloudtrail_log" {
     sid     = "${local.PJPrefix}-${local.EnvPrefix}-management-event-cloudtrail-write"
     actions = ["s3:PutObject"]
     resources = [
-      "${aws_s3_bucket.cloudtrail_log.arn}/*/AWSLogs/${local.account_id}/*"
+      "${aws_s3_bucket.cloudtrail_log.arn}//AWSLogs/${local.account_id}/"
     ]
 
     principals {
@@ -263,6 +266,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail_log_management_even
   }
 
 }
+*/
+# "${aws_s3_bucket.cloudtrail_log.arn}//AWSLogs/${local.account_id}/"を"${aws_s3_bucket.cloudtrail_log.arn}/*/AWSLogs/${local.account_id}/*"に変更する必要あり
+
 ## ------------------------------------------------------------#
 ##  flow_log
 ## ------------------------------------------------------------#
