@@ -238,6 +238,23 @@ module "alb_access_log_athena" {
 
 }
 */
+## -------------------------------------------------------------#
+## vpc flowlog
+## -------------------------------------------------------------#
+/*
+module "vpc_flowlog" {
+  source = "../../modules/logging/vpc-flowlog"
+
+  # 共通設定
+  pj_prefix  = local.pj_prefix
+  env_prefix = local.env_prefix
+  account_id = local.account_id
+
+  # vpc flowlog設定
+  aws_vpc_id = module.network.vpc_id
+
+}
+*/
 # -------------------------------------------------------------#
 # monitoring
 # -------------------------------------------------------------#
