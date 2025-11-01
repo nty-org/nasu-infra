@@ -390,11 +390,14 @@ resource "aws_codestarconnections_connection" "this" {
 # ------------------------------------------------------------#
 #  s3
 # ------------------------------------------------------------#
-
+/*
 resource "aws_s3_bucket" "codepipeline_artifact" {
   bucket = "${local.PJPrefix}-${local.EnvPrefix}-pipeline"
-}
 
+  # バケット内のオブジェクトを強制的に削除
+  force_destroy = true 
+}
+*/
 # ------------------------------------------------------------#
 #  codepipeline 
 # ------------------------------------------------------------#

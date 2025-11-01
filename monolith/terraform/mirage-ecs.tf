@@ -310,9 +310,12 @@ resource "aws_ssm_parameter" "htmldir" {
 # ------------------------------------------------------------#
 #  mirage ecs
 # ------------------------------------------------------------#
-
+/*
 resource "aws_s3_bucket" "mirage_ecs" {
   bucket = "${local.PJPrefix}-${local.EnvPrefix}-mirage-ecs"
+
+  # バケット内のオブジェクトを強制的に削除
+  force_destroy = true  
 }
 
 resource "aws_s3_object" "config" {
@@ -327,7 +330,7 @@ resource "aws_s3_object" "html" {
   key      = "html/${each.value}"
   source   = format("./html/%s", each.value)
 }
-
+*/
 # ------------------------------------------------------------#
 #  acm
 # ------------------------------------------------------------#
