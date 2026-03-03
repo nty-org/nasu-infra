@@ -1,10 +1,7 @@
 locals {
-
   pj_prefix  = "nasu"
-  env_prefix = "test"
+  env_prefix = "prod"
 
-  account_id = "267751904634"
-
-  zone_name = "sunasuna.net"
+  account_id = "098779063106"
 
 }

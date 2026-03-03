@@ -25,7 +25,7 @@ resource "aws_ssm_parameter" "server_env" {
 ## ------------------------------------------------------------#
 ##  app
 ## ------------------------------------------------------------#
-
+/*
 resource "aws_ssm_parameter" "app_container_name" {
   name  = "/${local.PJPrefix}/${local.EnvPrefix}/app/CONTAINER_NAME"
   type  = "String"
@@ -135,41 +135,6 @@ resource "aws_ssm_parameter" "taskdef_name_migrate" {
     Service = "${local.PJPrefix}-${local.EnvPrefix}-app"
   }
 }
-*/
-
-# ------------------------------------------------------------#
-#  sync
-# ------------------------------------------------------------#
-
-resource "aws_ssm_parameter" "secret_key_name_sync" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/SECRET_KEY_NAME_SYNC"
-  type  = "String"
-  value = "${local.PJPrefix}/${local.EnvPrefix}/sync"
-
-  tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-sync"
-  }
-}
-
-resource "aws_ssm_parameter" "image_repository_name_sync" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/sync/IMAGE_REPOSITORY_NAME"
-  type  = "String"
-  value = "${local.PJPrefix}/${local.EnvPrefix}/sync"
-
-  tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-sync"
-  }
-}
-
-resource "aws_ssm_parameter" "sync_container_name" {
-  name  = "/${local.PJPrefix}/${local.EnvPrefix}/sync/CONTAINER_NAME"
-  type  = "String"
-  value = "sync"
-
-  tags = {
-    Service = "${local.PJPrefix}-${local.EnvPrefix}-sync"
-  }
-}
 
 ## ------------------------------------------------------------#
 ##  api
@@ -204,7 +169,7 @@ resource "aws_ssm_parameter" "secret_key_name_api" {
     Service = "${local.PJPrefix}-${local.EnvPrefix}-api"
   }
 }
-
+*/
 # ------------------------------------------------------------#
 #  document
 # ------------------------------------------------------------#

@@ -1,13 +1,5 @@
 # ------------------------------------------------------------#
-#  EC2
+#  common
 # ------------------------------------------------------------#
-/*
-data "aws_instance" "nat" {
 
-  filter {
-    name   = "tag:Name"
-    values = ["${local.pj_prefix}-${local.env_prefix}-nat-a"]
-  }
-
-}
-*/
+data "aws_caller_identity" "current" {}

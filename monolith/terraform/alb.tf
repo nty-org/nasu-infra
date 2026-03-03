@@ -291,6 +291,17 @@ resource "aws_lb" "code_server" {
   subnets            = data.aws_subnets.public.ids
 }
 
+resource "aws_lb_listener" "code_server_http" {
+  default_action {
+    target_group_arn = aws_lb_target_group.code_server.arn
+    type             = "forward"
+  }
+
+  load_balancer_arn = aws_lb.code_server.arn
+  port              = "80"
+  protocol          = "HTTP"
+}
+
 resource "aws_lb_listener" "code_server_https" {
   default_action {
     target_group_arn = aws_lb_target_group.code_server.arn
@@ -320,7 +331,7 @@ resource "aws_lb_target_group" "code_server" {
   target_type                   = "instance"
   load_balancing_algorithm_type = "round_robin"
   name                          = "${local.PJPrefix}-${local.EnvPrefix}-code-server-tg"
-  port                          = "80"
+  port                          = "8081"
   protocol                      = "HTTP"
   protocol_version              = "HTTP1"
   vpc_id                        = aws_vpc.this.id
@@ -335,6 +346,6 @@ resource "aws_lb_target_group" "code_server" {
 resource "aws_lb_target_group_attachment" "code_server" {
   target_group_arn = aws_lb_target_group.code_server.arn
   target_id        = data.aws_instance.code_server.id
-  port             = 80
+  port             = 8081
 }
 */
